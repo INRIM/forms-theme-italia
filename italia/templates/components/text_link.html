@@ -1,0 +1,15 @@
+<a href="{{ link }}" class="text-decoration-none  {{ customClass }}"
+        {% if target %} target="{{ target }}" {% endif %}
+>
+    {% if direction and direction=='left' %}
+        <svg class="icon icon-sm icon-primary mr-2">
+            <use xlink:href="/static/svg/sprite.svg#it-arrow-{{ direction }}"></use>
+        </svg>
+    {% endif %}
+    {{ text|safe }}
+    {% if direction and direction=='right' %}
+        <svg class="icon icon-sm icon-primary mr-2">
+            <use xlink:href="/static/svg/sprite.svg#it-arrow-{{ direction }}"></use>
+        </svg>
+    {% endif %}
+</a>

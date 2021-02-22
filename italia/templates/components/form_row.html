@@ -1,0 +1,15 @@
+{% if dividertop %}
+    <div class="border-top {{ dividertop }}"></div>
+{% endif %}
+<div class="form-row {{ customClass }}">
+    {% for item in rows %}
+            {{ item|safe }}
+    {% endfor %}
+</div>
+{% if alertname %}
+    <div id="{{ alertname }}" class=" {{ customClass }}"></div>
+{% endif %}
+{% if divider %}
+    <div class="border-top {{ divider }}"></div>
+{% endif %}
+{% block js %}{% endblock %}

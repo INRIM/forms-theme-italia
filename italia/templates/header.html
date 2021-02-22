@@ -1,0 +1,81 @@
+<header class="it-header-wrapper mt-3">
+    <div class="it-nav-wrapper">
+        <div class="it-header-center-wrapper theme-light border-bottom it-small-header">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="it-header-center-content-wrapper ">
+                            <div class="it-brand-wrapper">
+                                <a href="/">
+                                    <figure class="figure mt-3">
+                                        <img class="figure-img img-fluid" src="/static/img/logo.png"
+                                             style="width:80%;"/>
+                                    </figure>
+                                    <div class="it-brand-text ml-1">
+                                        <h2 class="no_toc">{{ app_name }}</h2>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="it-right-zone">
+                                {% if test_env %}
+                                <div class="it-search-wrapper text-right">
+
+                                    <figure class="figure mt-1">
+
+                                        <img class="figure-img img-fluid" src="/static/img/staging.png"
+                                             style="width:10%;"/>
+
+                                    </figure>
+                                    <span class="ml-2 d-none d-md-block">{{env}}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="it-header-slim-wrapper">
+        <div class="container ">
+            <div class="row">
+                <div class="col-12">
+                    <div class="it-header-slim-wrapper-content p-1">
+                        <div class="col1">
+                            <a href="/" class="btn btn-primary btn-icon btn-full">
+                                        <span class="rounded-icon">
+                                          <svg class="icon icon-primary">
+                                            <use xlink:href="/static/svg/sprite.svg#it-pa"></use>
+                                          </svg>
+                                        </span>
+                            </a>
+                            {% block header_menu %}{% endblock %}
+                        </div>
+                        <div class="col-3 offset-5">
+                            <div class="it-header-slim-wrapper-content">
+                                <div class="it-header-right-zone">
+                                    <a href="{% if login_act %} {{login_act}} {% else %} /login {% endif %}"
+                                       class="btn btn-primary btn-icon btn-full">
+                                        {% if login_user %}
+                                        <span class="avatar size-sm mr-2" href="#">
+                                            <img src="{{ avatar }}"
+                                                 alt="">
+                                        </span>
+                                        {% else %}
+                                        <span class="rounded-icon">
+                                          <svg class="icon icon-primary">
+                                            <use xlink:href="/static/svg/sprite.svg#it-user"></use>
+                                          </svg>
+                                        </span>
+                                        {% endif %}
+
+                                        <span class="d-none d-lg-block">{% if login_user %} {{login_user}} {% else %} Accedi {% endif %}</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+</header>

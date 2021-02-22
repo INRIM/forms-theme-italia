@@ -1,0 +1,13 @@
+<div class="form-check {{ customClass_check }}">
+    <div class="toggles">
+        <label for="{{ key }}_tl">
+            {{ label|safe }}
+            <input type="checkbox" name="{{ key }}_tl" id="{{ key }}_tl"
+                    {% if required %} required {% endif %}
+                    {% if value %} checked {% endif %}
+                    {% if disabled %} disabled {% endif %}
+            >
+            <span class="lever"></span>
+        </label>
+    </div>
+</div>

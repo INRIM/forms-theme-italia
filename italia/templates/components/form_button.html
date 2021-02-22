@@ -1,0 +1,24 @@
+<!--# 2020 Alessio Gerace @ Inrim-->
+<div class="{{ fgroupgp or 'form-group' }} {{ customClass }}" id="{{ key }}">
+    <button type="{{ type }}" name="{{ key }}_btn" class="btn {{ btn_class or 'btn-outline-primary' }}"
+            {% if formaction %}
+            formaction="{{ formaction }}"
+            {% endif %}
+            {% if datalocation %}
+            data-location="{{ datalocation }}"
+            {% endif %}
+            {% if dataid %}
+            data-id="{{ dataid }}"
+            {% endif %}
+            {% if disabled %} disabled {% endif %}
+    >
+        {% if icon %}
+            <svg class="icon">
+                <use xlink:href="/static/svg/sprite.svg#{{ icon }}"></use>
+            </svg>
+            <span>{{ label }}</span>
+        {% else %}
+            {{ label }}
+        {% endif %}
+    </button>
+</div>

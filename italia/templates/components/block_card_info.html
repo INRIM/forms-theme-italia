@@ -1,0 +1,19 @@
+<!--# 2020 Alessio Gerace @ Inrim-->
+<div class="{{ customClass }}">
+    <article class="card-space">
+        <div class="card card-bg {{ card_customClass }}">
+            <div class="card-body">
+                <h4 class="card-title {{ tit_customClass }}">{{ title }}</h4>
+                {% if value %}
+                <h5 class="{{ text_customClass }}">{{ value or '' }}</h5>
+                {% endif %}
+                {% if btnitems %}
+                <div class="read-more">
+                    {{ btnitems|safe }}
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </article>
+</div>

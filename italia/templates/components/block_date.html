@@ -1,0 +1,41 @@
+<div class="it-datepicker-wrapper {{ customClass }}" id="{{ key }}">
+    <div class="form-group">
+        <input class="form-control it-date-datepicker"
+               id="{{ key }}_in" name="{{ key }}_in" value="{{ value }}"
+               type="text"
+               placeholder="gg/mm/aaaa"
+                {% if required_from %} required {% endif %}
+                {% if disabled %} disabled {% endif %}
+        >
+        <label for="{{ key }}_in">{{ label }}</label>
+    </div>
+</div>
+<script>
+    {% if not disabled %}
+
+        $('#{{ key }}_in').datepicker({
+            weekDayFormat: 'narrow',
+            inputFormat: ["dd/MM/yyyy"],
+            outputFormat: 'dd/MM/yyyy',
+            {% if min %}
+                min: '{{ min }}',
+            {% endif %}
+
+            {% if max %}
+                max: '{{ max }}',
+            {% endif %}
+
+            {% if next %}
+                previous: '#{{ next }}_in',
+            {% endif %}
+
+            {% if previous %}
+                previous: '#{{ previous }}_in',
+            {% endif %}
+
+        });
+
+    {% endif %}
+
+</script>
+

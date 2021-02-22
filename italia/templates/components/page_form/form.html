@@ -1,0 +1,77 @@
+{% if title %}
+    <h5 class="card-title {{ cls_title }}">{{ title }}</h5>
+{% endif %}
+<form method="post" action="{{ api_action }}" enctype="multipart/form-data" class="col-12 {{ customClass }}"
+      id="{{ id_form }}">
+    <div id="{{ id_form }}_alert" class=" {{ customClass }}"></div>
+    {% for component in items %}
+        {{ component.render()|safe }}
+    {% endfor %}
+    <div class="form-group text-center" id="btn_actions">
+        {% if label %}
+            <button type="submit" name="form_app_form_btn" class="btn btn-outline-primary"
+                    {% if disabled %} disabled {% endif %}
+            >
+                {{ label }}
+            </button>
+        {% endif %}
+        {% if not no_cancel %}
+            <button type="button" class="btn btn-outline-primary go-back ml-2">
+                Abbandona
+            </button>
+        {% endif %}
+    </div>
+</form>
+
+{% if not excludejs %}
+    <script type="text/javascript" nonce="{{ nonce or '2726c7f26c' }}">
+        $(document).ready(function () {
+            $(function () {
+                $('[data-toggle="tooltip"]').tooltip()
+            })
+            $("#{{ id_form }}").submit(function (e) {
+                e.preventDefault(); // disable the POST of the form by the submit button
+                var data = $(this).serializeArray();
+                $.ajax({
+                    type: "POST",
+                    url: "{{ api_action }}",
+                    data: data,
+                    beforeSend: function () {
+                        $("#loader").removeClass("d-none");
+                    },
+                    error: function (e) {
+                        $("#loader").addClass("d-none");
+                        alert("Errore Interno conttatare Helpdesk", e);
+                    },
+                    success: function (result) {
+                        if ((result.hasOwnProperty('link')) && result.reload) {
+                            if (result.link === "#") {
+                                window.location.reload();
+                            } else {
+                                window.location.href = result.link;
+                            }
+                        }
+                        $("#loader").addClass("d-none");
+                        for (let item in result) {
+                            $(result[item].selector).replaceWith(result[item].value);
+                        }
+                        for (let item in result) {
+                            if (result[item].selector.includes('alert')) {
+                                let yc = $(result[item].selector).offset().top;
+                                $("html, body").animate({scrollTop: yc}, "slow");
+                                break;
+                            }
+                        }
+
+                    },
+                });
+            });
+            if ($("textarea").length > 0) {
+                $("textarea").height($("textarea")[0].scrollHeight);
+            }
+        });
+    </script>
+{% endif %}
+{% block js %}
+{% endblock %}
+

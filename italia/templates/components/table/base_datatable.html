@@ -1,0 +1,141 @@
+<!--# 2020 Alessio Gerace @ Inrim-->
+{% if title %}
+    <h5 class="card-title {{ cls_title or "text-center" }}">{{ title }}</h5>
+{% endif %}
+{{ table|safe }}
+<script type="text/javascript">
+    let lst_exclude = [{{string_exclude}}];
+    let t = $('#{{ tab_id }}').DataTable({
+
+        {% if columns_search %}
+            initComplete: function () {
+                this.api().columns().every(function () {
+                    if (this.index() != {{ handle_row["col"] if handle_row else -1}} && !lst_exclude.includes(this.index())) {
+                        let column = this;
+                        let befores = $('<div class="bootstrap-select-wrapper"></div>').appendTo($(column.header()));
+                        let select = $('<select class="select_table" data-live-search="true" title="Cerca" ><option value="">--</option></select>')
+                            .appendTo(befores)
+                            .on('change', function () {
+                                let val = $.fn.dataTable.util.escapeRegex(
+                                    $(this).val()
+                                );
+
+                                column
+                                    .search(val ? '^' + val + '$' : '', true, false)
+                                    .draw();
+                            });
+
+                        column.data().unique().sort().each(function (d, j) {
+                            select.append('<option value="' + d + '">' + d + '</option>')
+                        });
+                    }
+
+                });
+            },
+        {% endif %}
+
+        {% if columnDefs %}
+            "columnDefs": [{{ columnDefs|tojson|safe }}],
+        {% endif %}
+
+        {% if tab_responsive %}
+            responsive: true,
+        {% endif %}
+        //select: true,
+        autoFill: true,
+        //searching: true,
+
+
+        {% if dom_todo %}
+            dom: '{{dom_todo}}',
+        {% endif %}
+
+        {% if dom_todo and 'B' in dom_todo %}
+            buttons: [
+
+                'excel',
+                'csvHtml5',
+            ],
+        {% endif %}
+
+        {% if pageLength %}
+            pageLength: '{{pageLength}}',
+        {% endif %}
+
+    });
+
+    {% if click_row %}
+        $('#{{ tab_id }} tbody').on('click', 'tr', function () {
+            let data = t.row(this).data();
+            window.location.href = '{{ click_row["url"] }}' + data[{{ click_row["col"] }}];
+        });
+    {% endif %}
+
+    {% if handle_row %}
+
+        t.on('order.dt search.dt', function () {
+            t.column({{ handle_row["col"] }}, {search: 'applied', order: 'applied'}).nodes().each(function (cell, i) {
+                let value = $(cell).text();
+                if (Number.isInteger(parseInt(value))) {
+                    cell.innerHTML = '<a href="{{handle_row["url"]}}' + value + '">{{handle_row["label"]|safe}}</a>';
+                    t.cell(cell).invalidate('dom');
+                }
+
+            });
+        }).draw();
+    {% endif %}
+
+    {% if ajax_actions %}
+
+
+        $('#{{ tab_id }} tbody').on('click', 'button', function () {
+            let loc_url = $(this).data("location");
+            let id = $(this).data("id");
+            let data = t.row($(this).parents('tr')).data();
+            let row_id = t.row($(this).parents('tr'))[0][0];
+            if (data == undefined) {
+
+                let selected_row = $(this).parents('tr');
+                if (selected_row.hasClass('child')) {
+                    selected_row = selected_row.prev();
+                }
+
+                data = t.row(selected_row).data();
+                row_id = t.row(selected_row)[0][0];
+
+            }
+            $.ajax({
+                type: "POST",
+                url: loc_url,
+                data: {'id': id, 'row_data': JSON.stringify(data)},
+                success: function (result) {
+                    if ((result.hasOwnProperty('link')) && result.reload) {
+                        window.location.href = result.link;
+                    }
+                    for (let item in result) {
+                        if (result[item].hasOwnProperty('rowdata')) {
+                            newData = result[item].rowdata;
+                            t.row(row_id).data(newData).draw();
+                        } else {
+                            $(result[item].selector).replaceWith(result[item].value);
+                        }
+
+                    }
+                },
+                error: function (e) {
+                    alert("failure", e);
+                }
+            });
+        });
+
+
+    {% endif %}
+
+
+    {% if full_width %}
+        $('#{{ tab_id }}_wrapper').addClass("col-12");
+        $('#{{ tab_id }}').css("width", "100%");
+    {% endif %}
+
+
+</script>

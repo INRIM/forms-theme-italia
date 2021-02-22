@@ -1,0 +1,22 @@
+<div class="bootstrap-select-wrapper {{customClass}}" id="{{ key }}"  >
+    <label>{{label}}</label>
+    <select title="{{placeholder or 'scegli un opzione'}}" data-live-search="true" data-boundary="window"
+            id="{{ key }}_sel"
+            name="{{ key }}_sel"
+            data-dropup-auto="false"
+            data-live-search-placeholder="Sel. "
+            {% if required %} required {% endif %}
+            multiple="true" data-multiple-separator=""
+
+    >
+
+        {% for item in options %}
+        <option value="{{ item['id'] }}"
+        data-content="<span class='select-pill'><span class='select-pill-text'>{{ item['name'] }}</span></span>"
+                {% if values and (item['id'] in values) %} selected {% endif %}
+        ></option>
+        {% endfor %}
+
+    </select>
+
+</div>

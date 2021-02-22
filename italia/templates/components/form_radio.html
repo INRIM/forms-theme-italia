@@ -1,0 +1,13 @@
+<div class="form-group {{ customClass or '' }}" id="{{ name }}">
+
+    <div class="form-check {{ customClass }} {% if inline %} form-check-inline {% endif %} ">
+        <input type="radio" name="{{ key }}_ck" id="{{ key }}{{ id }}_ck"
+                {% if required %} required {% endif %}
+                {% if value %} checked {% endif %}
+                {% if disabled %} disabled {% endif %}
+               value="{{ id }}"
+        >
+        <label for="{{ key }}{{ id }}_ck">{{ label|safe }}</label>
+    </div>
+</div>
+

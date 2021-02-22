@@ -1,0 +1,73 @@
+<div class="form-group bootstrap-select-wrapper {{customClass}}" id="{{ key }}"  >
+    <label>{{label}}</label>
+    <select title="{{placeholder or 'scegli un opzione'}}" data-live-search="true" data-boundary="window"
+            id="{{ key }}_sel"
+            name="{{ key }}_sel"
+            data-dropup-auto="false"
+            data-live-search-placeholder="Cerca "
+            {% if required %} required {% endif %}
+            {% if disabled %} disabled {% endif %}
+
+    >
+
+        {% for item in options %}
+        <option value="{{ item['value'] }}"  {% if (item['value']|string == value) %} selected {% endif %}
+        >
+        {{ item['label'] }}</option>
+        {% endfor %}
+
+    </select>
+</div>
+{% block js %}
+<script type="text/javascript">
+    $("#{{ key }}_sel").selectpicker({
+        dropupAuto: false,
+        size: '4'
+    });
+    {% if (onchange  or  onchange_url ) %}
+    $("#{{ key }}_sel").change(function () {
+        var value = $(this).val();
+        var text = $("#{{ key }} option:selected").text();
+        $.ajax({
+            type: "POST",
+            url: "{{ onchange_url }}",
+            data: JSON.stringify({
+                value: value,
+                text: text
+            }),
+            beforeSend: function () {
+                $("#loader").removeClass("d-none");
+            },
+            error: function () {
+                // Handle the complete event
+                $("#loader").addClass("d-none");
+            },
+            success: function (result) {
+                if ((result.hasOwnProperty('link')) && result.reload) {
+                    if (result.link === "#") {
+                        window.location.reload();
+                    } else {
+                        window.location.href = result.link;
+                    }
+                }
+                for (let item in result) {
+                    $(result[item].selector).replaceWith(result[item].value);
+                    $(result[item].selector).find("input:text").focusin();
+                    $(result[item].selector).find("textarea").focusin();
+                    {% if updatetextarea %}
+                    if ($("textarea").val() !== "") {
+                        for (i=0; i<= $("textarea").length; i++){
+                            $("textarea").height($("textarea")[i].scrollHeight);
+                        }
+                    }
+
+                    {% endif %}
+                    $("#loader").addClass("d-none");
+
+                }
+            }
+        });
+    });
+    {% endif %}
+</script>
+{% endblock %}

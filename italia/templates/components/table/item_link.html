@@ -1,0 +1,9 @@
+{% if item %}
+    <a href="{{ str(item)|safe }}" target="_black">
+        <svg class="icon">
+            <use xlink:href="/static/svg/sprite.svg#it-external-link"></use>
+        </svg>
+    </a>
+{% else %}
+    --
+{% endif %}

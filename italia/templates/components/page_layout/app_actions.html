@@ -1,0 +1,45 @@
+<div class="container mb-2">
+    <div class="row">
+        <div class="col-lg-10 col-sm-8">
+            {% if backtop %}
+            <button type="button" class="btn btn-primary go-back">
+                <svg class="icon icon-sm icon-white mr-2">
+                    <use xlink:href="/static/svg/sprite.svg#it-arrow-left"></use>
+                </svg>
+            </button>
+            {% endif %}
+
+            {% if xls_url %}
+            <a href="xls_url" role="button" class="btn btn-primary btn-xs">
+                <span>XLS</span>
+                <svg class="icon icon-white   icon-padded">
+                    <use xlink:href="/static/svg/sprite.svg#it-download"></use>
+                </svg>
+
+            </a>
+            {% endif %}
+            {% if csv_url %}
+            <a href="{{ csv_url }}" role="button" class="btn btn-primary btn-xs">
+                <span>CSV</span>
+                <svg class="icon icon-white   icon-padded">
+                    <use xlink:href="/static/svg/sprite.svg#it-download"></use>
+                </svg>
+            </a>
+            {% endif %}
+            {% if pdf_url %}
+            <a href="{{ pdf_url }}" role="button" class="btn btn-primary btn-xs">
+                <span>PDF</span>
+                <svg class="icon icon-white icon-padded">
+                    <use xlink:href="/static/svg/sprite.svg#it-download"></use>
+                </svg>
+
+            </a>
+            {% endif %}
+        </div>
+        <div class="col-lg-2 col-sm-4">
+            {% if today_date %}
+            <span class="pull-right"><h6>Oggi: {{ today_date }}</h6></span>
+            {% endif %}
+        </div>
+    </div>
+</div>
