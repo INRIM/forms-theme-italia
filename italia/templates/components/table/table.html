@@ -1,4 +1,18 @@
-<table class="{{customClass}}">
-    {{ heder|safe }}
-    {{ body|safe }}
+<table id="key" class="{{ customClass }}">
+{#    <h5>{{ label }}</h5>#}
+{#    <h5>{{ grid_rows }}</h5>#}
+{#    <p>{{ validate['minLength'] }}</p>#}
+
+    <thead>
+        <tr>
+            {% for item in headers %}
+                <th>item</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for component in grid_rows %}
+        {{ component.render()|safe }}
+    {% endfor %}
+    </tbody>
 </table>

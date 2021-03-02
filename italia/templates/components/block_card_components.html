@@ -5,11 +5,9 @@
             {% if label %}
                 <h6 class="card-title text-white bg-dark p-2 mb-4{{ tit_customClass }}">{{ label }}</h6>
             {% endif %}
-            {% if rows %}
-                {% for item in rows %}
-                    {{ item |safe }}
-                {% endfor %}
-            {% endif %}
+            {% for component in items %}
+                {{ component.render(size=width)|safe }}
+            {% endfor %}
         </div>
     </div>
 </div>

@@ -1,17 +1,19 @@
 # Copyright Nova Code (http://www.novacode.nl)
 # See LICENSE file for full licensing details.
+
 import json
 from collections import OrderedDict
 
 from formiodata.utils import base64_encode_url, decode_resource_template, fetch_dict_get_value
 from .default_config_components import *
+import copy
 
 
 class Component:
 
     def __init__(self, raw, builder, **kwargs):
         # TODO or provide the Builder object?
-        self.raw = raw
+        self.raw = copy.deepcopy(raw)
         self.builder = builder
         self.form = {}
 
@@ -27,10 +29,16 @@ class Component:
         self.tmpe = builder.tmpe
         self.components_base_path = builder.components_base_path
         self.component_items = []
+        self.multi_row = False
+        self.grid_rows = []
 
     @property
     def key(self):
         return self.raw.get('key')
+
+    @key.setter
+    def key(self, value):
+        self.raw['key'] = value
 
     @property
     def type(self):
@@ -69,12 +77,14 @@ class Component:
     def hidden(self):
         return self.raw.get('hidden')
 
-    def make_config_new(self, component, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, disabled=False, cls_size=" col-lg-12 ", row=0):
         cfg_map = form_io_default_map.copy()
         cfg = {}
         for key, value in component.items():
             if key not in cfg_map:
                 cfg[key] = value
+                if key == "width":
+                    cls_size = f" col-lg-{value}"
             else:
                 if isinstance(cfg_map[key], dict):
                     if component.get(key):
@@ -98,41 +108,40 @@ class Component:
                     if k == "customClass" and v == "":
                         v = cls_size
                     if k == "value":
-                        v = component['_object'].value
+                        v = self.value
+                    if k == "key" and row > 0:
+                        v = f"{row}_{v}"
                     cfg[k] = v
         if "customClass" not in cfg:
             cfg['customClass'] = cls_size
         if disabled:
             cfg['disabled'] = disabled
+        cfg['items'] = self.component_items
         return cfg
 
     def render_template(self, name: str, context: dict):
         template = self.tmpe.get_template(name)
         return template.render(context)
 
-    def render(self, cls_size=" col-lg-12 "):
-        if self.html_component == "":
-            cfg = self.make_config_new(self.raw, self.builder.disabled, cls_size=cls_size)
-            if self.key == "submit":
-                return ""
-            if not 'rows' in cfg:
-                cfg['rows'] = []
-            if self.raw.get('components'):
-                for sub_node in self.component_items:
-                    cfg['rows'].append(sub_node.render())
-            for k, vals in self.raw.copy().items():
-                if isinstance(vals, list):
-                    for v in vals:
-                        if 'components' in v:
-                            for sb_node in v['components']:
-                                size = v.get('width', "12")
-                                cfg['rows'].append(sb_node['_object'].render(cls_size=f"col-lg-{size}"))
+    def log_render(self, cfg, size="12", row=0):
+        print("-------------------------")
+        print(self.key)
+        print(size)
+        print(row)
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~")
+        print(self.raw)
+        print(cfg)
+        print("-------------------------")
 
-            self.html_component = self.render_template(
-                f"{self.components_base_path}{formio_map[self.raw.get('type')]}", cfg)
-            return self.html_component
-        else:
+    def render(self, size="12", row=0, log=False):
+        cfg = self.make_config_new(self.raw, self.builder.disabled, cls_size=f"col-lg-{size}", row=row)
+        if log:
+            self.log_render(cfg, size, row)
+        if self.key == "submit":
             return ""
+        self.html_component = self.render_template(
+            f"{self.components_base_path}{formio_map[self.raw.get('type')]}", cfg)
+        return self.html_component
 
 
 # global
@@ -186,7 +195,9 @@ class selectComponent(Component):
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
         self.item_data = {}
-        self.template_label_keys = decode_resource_template(self.raw.get('template'))
+        self.template_label_keys = []
+        if self.raw.get('template'):
+            self.template_label_keys = decode_resource_template(self.raw.get('template'))
         self.compute_resources()
 
     def compute_resources(self):
@@ -340,6 +351,10 @@ class columnsComponent(Component):
     pass
 
 
+class columnComponent(Component):
+    pass
+
+
 class fieldsetComponent(Component):
     pass
 
@@ -369,7 +384,26 @@ class tabsComponent(Component):
 
 # Data components
 
+class datagridRowComponent(Component):
+    pass
+
 class datagridComponent(Component):
+
+    def __init__(self, raw, builder, **kwargs):
+        super().__init__(raw, builder, **kwargs)
+        self.headers = []
+        self.multi_row = True
+        self.min_row = 1
+        self.max_row = 1
+        self.row_id = 0
+        self.aval_validate_row()
+
+    def aval_validate_row(self):
+        if self.raw.get("validate"):
+            if self.raw.get("validate").get("minLength"):
+                self.min_row = int(self.raw.get("validate").get("minLength"))
+            if self.raw.get("validate").get("maxLength"):
+                self.max_row = int(self.raw.get("validate").get("maxLength"))
 
     @property
     def labels(self):
@@ -380,6 +414,7 @@ class datagridComponent(Component):
             else:
                 label = comp['label']
             labels[comp['key']] = label
+            self.columns.append(label)
         return labels
 
     @property
@@ -404,6 +439,23 @@ class datagridComponent(Component):
                 row[key] = component
             rows.append(row)
         return rows
+
+    def eval_multi_rows(self):
+        labels = self.labels
+        this_rows = self.rows[:]
+        number_items = self.min_row
+        if this_rows:
+            number_items = len(this_rows)
+        for i in range(number_items):
+            self.add_grid_row(rid=i)
+
+    def add_grid_row(self, rid=0):
+        if len(self.grid_rows) < self.max_row:
+            row = []
+            for sub_node in self.component_items:
+                new_node = copy.copy(sub_node)
+                row.append(new_node)
+            self.grid_rows.append(row[:])
 
 
 # Premium components
@@ -444,6 +496,8 @@ class resourceComponent(Component):
         self.compute_resources()
 
     def compute_resources(self):
+        print("Eval Reource")
+
         resource_id = self.raw.get('resource')
         if resource_id and not resource_id == "":
             if not self.resources and self.resources_ext:
@@ -458,6 +512,8 @@ class resourceComponent(Component):
                         "label": label,
                         "value": item['_id']
                     })
+            print("End")
+            print(self.raw)
 
     @Component.value.setter
     def value(self, value):

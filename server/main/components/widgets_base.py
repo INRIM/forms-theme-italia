@@ -17,6 +17,7 @@ class WidgetsBase:
             request_xhr_key = request.headers.get('X-Requested-With')
             return request_xhr_key == 'XMLHttpRequest'
 
+        self.authtoken = request.headers.get('authtoken')
         self.tmpe = templates_engine
         self.list_ajax_reponse = []
         self.dte = DateEngine()
