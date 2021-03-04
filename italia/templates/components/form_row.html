@@ -3,7 +3,7 @@
 {% endif %}
 <div class="form-row {{ customClass }}">
     {% for component in items %}
-        {{ component.render()|safe }}
+        {{ component.render(id_form)|safe }}
     {% endfor %}
 </div>
 {% if alertname %}

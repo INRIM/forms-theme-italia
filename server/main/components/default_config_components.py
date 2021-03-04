@@ -96,7 +96,7 @@ formio_map = {
     "content": "",
     "currency": "",
     "datagrid": "table/table.html",
-    "datagridRow": "table/table_body.html",
+    "datagridRow": "table/table_row.html",
     "datamap": "",
     "datetime": "block_date.html",
     "day": "",

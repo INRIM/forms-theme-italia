@@ -10,7 +10,7 @@ from . import default_config_components
 
 class WidgetsBase:
 
-    def __init__(self, templates_engine: Jinja2Templates, request: Request):
+    def __init__(self, templates_engine: Jinja2Templates, request: Request,**kwargs):
         super(WidgetsBase, self).__init__()
 
         def eval_req_type(r):

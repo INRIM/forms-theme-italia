@@ -5,7 +5,7 @@
       id="{{ id_form }}">
     <div id="{{ id_form }}_alert" class=" {{ customClass }}"></div>
     {% for component in items %}
-        {{ component.render()|safe }}
+        {{ component.render(id_form)|safe }}
     {% endfor %}
     <div class="form-group text-center" id="btn_actions">
         {% if label %}
@@ -34,7 +34,7 @@
                 var data = $(this).serializeArray();
                 $.ajax({
                     type: "POST",
-                    url: "{{ api_action }}",
+                    url: "/client/{{ id_form }}",
                     data: data,
                     beforeSend: function () {
                         $("#loader").removeClass("d-none");

@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 
 class TableWidget(PageWidget):
 
-    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False):
+    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False, **kwargs):
         super(TableWidget, self).__init__(
             templates_engine, request, settings, schema=schema, resource_ext=resource_ext,
-            disabled=disabled
+            disabled=disabled, **kwargs
         )
         self.cls_title = " text-center "
         self.api_action = "/"
@@ -42,6 +42,11 @@ class TableWidget(PageWidget):
         return res
 
     def get_df(self, **values):
+        print(".....................")
+
+        print(values['data_list'])
+        print("---------------------")
+
         df = pd.DataFrame(values['data_list'])
         df = df.rename_axis(None)
         if values['data_list']:
@@ -53,25 +58,32 @@ class TableWidget(PageWidget):
                 df[item] = [self.convert_link(f"{self.components_base_path}item_link.html", l) for l in df[item]]
             for item in values.get('strings') or []:
                 df[item] = [self.convert_str_server_ui(d) for d in df[item]]
+            print("df[values['columns'].keys()]", values['columns'].keys())
             dfc = df[values['columns'].keys()]
             df = dfc.rename(columns=dict(values['columns']))
         return df
 
-    def make_def_tabe(self, data, **kwargs):
+    def make_def_table(self, data, **kwargs):
         return self.render_def_table(data, **kwargs)
 
     def get_columns(self, data):
         keys = list(data[0].keys())[:]
-        keys.insert(0, keys.pop(keys.index("_id")))
-        print("get_columns", keys)
+        if "_id" in self.schema:
+            keys.insert(0, keys.pop(keys.index("_id")))
+        else:
+            keys.insert(0, keys.pop(keys.index("id")))
         keys2 = keys[:]
         cols = {keys[i]: keys2[i] for i in range(len(keys))}
-        print(cols)
+        logger.info(keys)
         return collections.OrderedDict(cols)
 
     def render_def_table(self, data_list, **kwargs):
         template = f"{self.components_base_path}base_datatable.html"
         columns = self.get_columns(data_list)
+        if "_id" in self.schema:
+            idkey = '_id'
+        else:
+            idkey = 'id'
         click_url_base = kwargs.get("click_url", "/")
         table_view = {
             "title": self.title,
@@ -91,7 +103,7 @@ class TableWidget(PageWidget):
                 "url": click_url_base,
             },
             "columnDefs": {
-                "targets": [list(columns.keys()).index('_id')],
+                "targets": [list(columns.keys()).index(idkey)],
                 "visible": False,
             },
             'pageLength': len(data_list),

@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 class TableFormWidget(TableWidget):
 
     def __init__(self, templates_engine, request, settings, schema={}, form_schema={}, resource_ext=None,
-                 disabled=False):
+                 disabled=False, **kwargs):
         super(TableFormWidget, self).__init__(
             templates_engine, request, settings, schema=schema, resource_ext=resource_ext,
-            disabled=disabled
+            disabled=disabled, **kwargs
         )
         self.form_schema = form_schema
         self.builder = Builder(
@@ -28,16 +28,25 @@ class TableFormWidget(TableWidget):
             disabled=self.disabled
         )
 
-    def make_def_tabe(self, data, **kwargs):
+    def make_def_table(self, data, **kwargs):
+        logger.info("make_def_table")
         self.form_c = Form({}, self.builder)
         self.title = self.form_schema['title']
-        self.name = self.form_schema['_id']
+        if "_id" in self.schema:
+            self.name = self.schema['_id']
+        if "id" in self.schema:
+            self.name = self.schema['id']
         return self.render_def_table(data, **kwargs)
 
     def get_columns(self, data):
-        cols = {'_id': '_id'}
+        cols = {}
+        if "_id" in self.schema:
+            cols = {'_id': '_id'}
+        else:
+            cols = {'id': 'id'}
+
         for key, component in self.builder.components.items():
-            if component.raw.get('tableView'):
+            if component.raw.get('tableView') and len(data) > 0 and data[0].get(component.key):
                 cols[component.key] = component.label
         print("get_columns", cols)
-        return collections.OrderedDict(cols)
+        return collections.OrderedDict(cols.copy())

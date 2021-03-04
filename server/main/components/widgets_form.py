@@ -81,10 +81,10 @@ class CustomBuilder(Builder):
 
 class FormIoWidget(PageWidget):
 
-    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False):
+    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False, **kwargs):
         super(FormIoWidget, self).__init__(
             templates_engine, request, settings, schema=schema, resource_ext=resource_ext,
-            disabled=disabled
+            disabled=disabled, **kwargs
         )
         self.cls_title = " text-center "
         self.api_action = "/"
@@ -113,6 +113,28 @@ class FormIoWidget(PageWidget):
                             if sub2_node.component_items:
                                 for sub3_node in sub2_node.component_items:
                                     print("------------->", sub3_node, sub3_node.key)
+
+    def get_component_by_key(self, key):
+        for node in self.builder.main.component_items:
+            if node.key == key:
+                return node
+            if node.component_items:
+                for sub_node in node.component_items:
+                    if sub_node.key == key:
+                        return sub_node
+                    if sub_node.multi_row:
+                        for row in sub_node.grid_rows:
+                            for sub3_node in row:
+                                if sub3_node.key == key:
+                                    return sub3_node
+                    elif sub_node.component_items:
+                        for sub2_node in sub_node.component_items:
+                            if sub2_node.key == key:
+                                return sub2_node
+                            if sub2_node.component_items:
+                                for sub3_node in sub2_node.component_items:
+                                    if sub3_node.key == key:
+                                        return sub3_node
 
     def make_form(self, data):
         # self.print_structure()

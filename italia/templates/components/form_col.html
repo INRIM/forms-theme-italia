@@ -1,6 +1,6 @@
 <div class="{{ customClass }}">
     {% for component in items %}
-        {{ component.render()|safe }}
+        {{ component.render(id_form)|safe }}
     {% endfor %}
 </div>
 {% if alertname %}

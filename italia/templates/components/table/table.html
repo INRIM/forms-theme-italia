@@ -1,18 +1,94 @@
-<table id="key" class="{{ customClass }}">
-{#    <h5>{{ label }}</h5>#}
-{#    <h5>{{ grid_rows }}</h5>#}
-{#    <p>{{ validate['minLength'] }}</p>#}
-
+<table id="{{ key }}" class="{{ customClass }}">
+    {#    <h5>{{ label }}</h5>#}
+    {#    <h5>{{ grid_rows }}</h5>#}
+    {#    <p>{{ validate['minLength'] }}</p>#}
     <thead>
-        <tr>
-            {% for item in headers %}
-                <th>item</th>
-            {% endfor %}
-        </tr>
+    <tr>
+        {% for item in headers %}
+            <th>item</th>
+        {% endfor %}
+    </tr>
     </thead>
-    <tbody>
-    {% for component in grid_rows %}
-        {{ component.render()|safe }}
-    {% endfor %}
+    <tbody id="{{ key }}_body" data-num_rows="0">
+    <tr id="{{ key }}_AddRow">
+        <td colspan="5">
+            <button type="button" class="btn btn-primary btn-xs btn-icon" id="{{ key }}_btn_add">
+                    <span class="rounded-icon rounded-primary">
+                        <svg class="icon icon-white"><use
+                                xlink:href="/static/svg/sprite.svg#it-plus-circle"></use></svg>
+                    </span>
+                <span class="sr-only">Aggiungi Riga</span>
+            </button>
+        </td>
+    </tr>
     </tbody>
+    <tfoot id="{{ key }}_foot">
+
+    </tfoot>
 </table>
+<script type="text/javascript" nonce="{{ nonce or '2726c7f26c' }}">
+
+
+    function addRow(row) {
+        var table = $("#{{ key }}_body");
+        table.append(row);
+    };
+
+    function addRows(rows) {
+        for (let item in rows) {
+            addRow(rows[item]);
+        }
+        $("#{{ key }}_body").append($("#{{ key }}_AddRow"))
+    };
+
+    $.ajax({
+        type: "GET",
+        url: "/client/grid/{{ key }}/{{ id_form }}/rows",
+        data: {},
+        beforeSend: function () {
+            $("#loader").removeClass("d-none");
+            $("#{{ key }}_btn_add").addClass("d-none");
+        },
+        error: function (e) {
+            $("#loader").addClass("d-none");
+            alert("Errore Interno conttatare Helpdesk", e);
+        },
+        success: function (result) {
+            addRows(result.lines);
+            $(this).data("data_num_rows", result.numrows);
+            if (result.showAdd) {
+                $("#{{ key }}_btn_add").removeClass("d-none");
+            }
+            $("#{{ key }}_btn_add").removeClass("d-none");
+            $(".remove_row").removeClass("d-none");
+            $("#loader").addClass("d-none");
+        },
+    });
+
+    $("#{{ key }}_btn_add").on("click", function () {
+        let num_rows = $("#{{  key  }}_body").data('num_rows');
+        $.ajax({
+            type: "GET",
+            url: "/client/grid/{{ key }}/{{ id_form }}/" + num_rows + "newrow",
+            data: {},
+            beforeSend: function () {
+                $("#{{ key }}_foot").addClass("d-none");
+                $("#loader").removeClass("d-none");
+                $("#{{ key }}_btn_add").addClass("d-none");
+            },
+            error: function (e) {
+                $("#loader").addClass("d-none");
+                alert("Errore Interno conttatare Helpdesk", e);
+            },
+            success: function (result) {
+                addRows(result.line);
+                if (result.showAdd) {
+                    $("#{{ key }}_foot").removeClass("d-none");
+                }
+                $("#loader").addClass("d-none");
+            },
+        });
+    });
+
+
+</script>

@@ -1,12 +1,11 @@
-
 from .widgets_base import WidgetsBase
-
 
 
 class PageWidget(WidgetsBase):
 
-    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False):
-        super(PageWidget, self).__init__(templates_engine, request)
+    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False, **kwargs):
+        super(PageWidget, self).__init__(templates_engine, request, **kwargs)
+        self.base_path = kwargs.get('base_path', "/")
         self.settings = settings
         self.schema = schema
         self.ext_resource = resource_ext
@@ -29,6 +28,7 @@ class PageWidget(WidgetsBase):
         else:
             user = False
         base_prj_data = {
+            "tocken": self.authtoken,
             'app_name': self.settings.app_name,
             'version': self.settings.app_version,
             'env': "test",
@@ -41,7 +41,9 @@ class PageWidget(WidgetsBase):
             "error": self.error,
             "export_button": self.export_btn,
             "rows": self.rows,
-            "request": self.request
+            "request": self.request,
+            "base_path": self.base_path
+
         }
         kwargs_def = {**context, **base_prj_data}
         return self.response_template(template_name_or_list, kwargs_def)

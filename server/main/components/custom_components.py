@@ -77,7 +77,7 @@ class Component:
     def hidden(self):
         return self.raw.get('hidden')
 
-    def make_config_new(self, component, disabled=False, cls_size=" col-lg-12 ", row=0):
+    def make_config_new(self, component, id_form, disabled=False, cls_size=" col-lg-12 ", row=0):
         cfg_map = form_io_default_map.copy()
         cfg = {}
         for key, value in component.items():
@@ -109,14 +109,13 @@ class Component:
                         v = cls_size
                     if k == "value":
                         v = self.value
-                    if k == "key" and row > 0:
-                        v = f"{row}_{v}"
                     cfg[k] = v
         if "customClass" not in cfg:
             cfg['customClass'] = cls_size
         if disabled:
             cfg['disabled'] = disabled
         cfg['items'] = self.component_items
+        cfg['id_form'] = id_form
         return cfg
 
     def render_template(self, name: str, context: dict):
@@ -133,8 +132,8 @@ class Component:
         print(cfg)
         print("-------------------------")
 
-    def render(self, size="12", row=0, log=False):
-        cfg = self.make_config_new(self.raw, self.builder.disabled, cls_size=f"col-lg-{size}", row=row)
+    def render(self, id_form, size="12", row=0, log=False):
+        cfg = self.make_config_new(self.raw, id_form, self.builder.disabled, cls_size=f"col-lg-{size}", row=row)
         if log:
             self.log_render(cfg, size, row)
         if self.key == "submit":
@@ -385,7 +384,14 @@ class tabsComponent(Component):
 # Data components
 
 class datagridRowComponent(Component):
-    pass
+    def __init__(self, raw, builder, **kwargs):
+        super().__init__(raw, builder, **kwargs)
+        self.headers = []
+        self.grid = None
+        self.min_row = 1
+        self.max_row = 1
+        self.row_id = 0
+
 
 class datagridComponent(Component):
 
@@ -395,6 +401,7 @@ class datagridComponent(Component):
         self.multi_row = True
         self.min_row = 1
         self.max_row = 1
+        self.add_enabled = True
         self.row_id = 0
         self.aval_validate_row()
 
@@ -420,42 +427,36 @@ class datagridComponent(Component):
     @property
     def rows(self):
         rows = []
-        components = self.builder.components
-
         # Sanity check is really needed.
         # TODO add test for empty datagrid value.
-        if not self.value:
-            return rows
-
-        for row_dict in self.value:
-            row = OrderedDict()
-            for key, val in row_dict.items():
-                # Copy component raw (dict), to ensure no binding and overwrite.
-                component = components[key].raw.copy()
-                component_obj = self.builder.get_component_object(component)
-                if component_obj.input:
-                    component_obj.value = val
-                component['_object'] = component_obj
-                row[key] = component
+        numrow = self.min_row
+        if self.value:
+            numrow = len(self.value)
+        if numrow > self.max_row:
+            numrow = self.max_row
+            self.add_enabled = False
+        for row_id in range(numrow):
+            row = self.get_row(row_id)
             rows.append(row)
         return rows
 
-    def eval_multi_rows(self):
-        labels = self.labels
-        this_rows = self.rows[:]
-        number_items = self.min_row
-        if this_rows:
-            number_items = len(this_rows)
-        for i in range(number_items):
-            self.add_grid_row(rid=i)
-
-    def add_grid_row(self, rid=0):
-        if len(self.grid_rows) < self.max_row:
-            row = []
-            for sub_node in self.component_items:
-                new_node = copy.copy(sub_node)
-                row.append(new_node)
-            self.grid_rows.append(row[:])
+    def get_row(self, row_id):
+        raw_row = OrderedDict()
+        raw_row["key"] = f"row_{row_id}"
+        raw_row["type"] = "datagridRow"
+        row = self.builder.get_component_object(raw_row)
+        for component in self.component_items:
+            # Copy component raw (dict), to ensure no binding and overwrite.
+            component_raw = component.raw.copy()
+            component_raw['key'] = f"{component_raw.get('key')}_{row_id}"
+            component_obj = self.builder.get_component_object(component_raw)
+            if self.value:
+                for row_dict in self.value:
+                    for key, val in row_dict.items():
+                        if key == component_raw['key']:
+                            component_obj.value = val
+            row.component_items.append(component_obj)
+        return row
 
 
 # Premium components
