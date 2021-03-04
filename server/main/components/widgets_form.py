@@ -143,15 +143,10 @@ class FormIoWidget(PageWidget):
         # self.print_structure()
         self.load_data(data)
         self.title = self.schema['title']
-        if "_id" in self.schema:
-            self.name = self.schema['_id']
-        if "id" in self.schema:
-            self.name = self.schema['id']
-
+        self.name = self.schema['id']
         submit = self.form_c.components.get("submit")
         if submit:
             self.label = submit.label
-        # self.fetch_components(schema)
         return self.render_form()
 
     def render_form(self):

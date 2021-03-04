@@ -107,8 +107,6 @@ class Component:
                         v = self.i18n.get(v, v)
                     if k == "customClass" and v == "":
                         v = cls_size
-                    if k == "value":
-                        v = self.value
                     cfg[k] = v
         if "customClass" not in cfg:
             cfg['customClass'] = cls_size
@@ -116,6 +114,7 @@ class Component:
             cfg['disabled'] = disabled
         cfg['items'] = self.component_items
         cfg['id_form'] = id_form
+        cfg["value"] = self.value
         return cfg
 
     def render_template(self, name: str, context: dict):

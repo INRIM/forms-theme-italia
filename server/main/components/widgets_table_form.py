@@ -32,21 +32,14 @@ class TableFormWidget(TableWidget):
         logger.info("make_def_table")
         self.form_c = Form({}, self.builder)
         self.title = self.form_schema['title']
-        if "_id" in self.schema:
-            self.name = self.schema['_id']
-        if "id" in self.schema:
-            self.name = self.schema['id']
+        self.name = self.form_schema['id']
         return self.render_def_table(data, **kwargs)
 
     def get_columns(self, data):
-        cols = {}
-        if "_id" in self.schema:
-            cols = {'_id': '_id'}
-        else:
-            cols = {'id': 'id'}
-
+        cols = {'id': 'id'}
         for key, component in self.builder.components.items():
-            if component.raw.get('tableView') and len(data) > 0 and data[0].get(component.key):
+            if component.raw.get('tableView') and component.raw.get('type') and not component.raw.get(
+                    'tableView') == "dataGrid":
                 cols[component.key] = component.label
         print("get_columns", cols)
         return collections.OrderedDict(cols.copy())
