@@ -1,15 +1,20 @@
-<table id="{{ key }}" class="{{ customClass }}">
-    {#    <h5>{{ label }}</h5>#}
-    {#    <h5>{{ grid_rows }}</h5>#}
-    {#    <p>{{ validate['minLength'] }}</p>#}
-    <thead>
-    <tr>
-        {% for item in headers %}
-            <th>item</th>
-        {% endfor %}
-    </tr>
-    </thead>
-    <tbody id="{{ key }}_body" data-num_rows="0">
+<table id="{{ key }}" class="{{ customClass }} table table-striped">
+    {#    <thead>#}
+    {#    <tr>#}
+    {#        {% for item in headers %}#}
+    {#            <th>item</th>#}
+    {#        {% endfor %}#}
+    {#    </tr>#}
+    {#    </thead>#}
+    <p>
+        <span id="{{ key }}_numrows"></span>
+        <span id="{{ key }}_numrowso" class="sr-only"></span>
+    </p>
+    <tbody id="{{ key }}_body" data-numrows="0" data-minrows="{{ min_rows }}" data-maxrows="{{ max_rows }}"
+           data-actions="0">
+
+    </tbody>
+    <tfoot id="{{ key }}_foot" class="">
     <tr id="{{ key }}_AddRow">
         <td colspan="5">
             <button type="button" class="btn btn-primary btn-xs btn-icon" id="{{ key }}_btn_add">
@@ -21,9 +26,6 @@
             </button>
         </td>
     </tr>
-    </tbody>
-    <tfoot id="{{ key }}_foot">
-
     </tfoot>
 </table>
 <script type="text/javascript" nonce="{{ nonce or '2726c7f26c' }}">
@@ -35,11 +37,43 @@
     };
 
     function addRows(rows) {
+
         for (let item in rows) {
             addRow(rows[item]);
         }
-        $("#{{ key }}_body").append($("#{{ key }}_AddRow"))
+        $("#{{ key }}_body").append($("#{{ key }}_foot"));
     };
+
+    function addNewRow(row) {
+        addRow(row);
+        $("#{{ key }}_body").append($("#{{ key }}_foot"))
+    };
+
+    function updateActions(num) {
+        let actions = $("#{{  key  }}_body").data('actions');
+        let newactions = actions + num;
+        $("#{{  key  }}_body").data('actions', newactions);
+    }
+
+    function updateTableNumRow(numRows) {
+
+        $("#{{  key  }}_body").data('numrows', numRows);
+        $("#{{  key  }}_numrows").text("Righe: " + numRows);
+        $("#{{  key  }}_numrowso").text("Righe: " + numRows);
+
+    };
+
+    function showRemove() {
+        $(".remove_row").each(function () {
+            $(this).removeClass("d-none");
+        });
+    }
+
+    function hideRemove() {
+        $(".remove_row").each(function () {
+            $(this).addClass("d-none");
+        });
+    }
 
     $.ajax({
         type: "GET",
@@ -47,48 +81,74 @@
         data: {},
         beforeSend: function () {
             $("#loader").removeClass("d-none");
-            $("#{{ key }}_btn_add").addClass("d-none");
+            $("#{{ key }}_foot").addClass("d-none");
         },
         error: function (e) {
             $("#loader").addClass("d-none");
             alert("Errore Interno conttatare Helpdesk", e);
         },
         success: function (result) {
-            addRows(result.lines);
-            $(this).data("data_num_rows", result.numrows);
-            if (result.showAdd) {
-                $("#{{ key }}_btn_add").removeClass("d-none");
+            let maxrows = $("#{{  key  }}_body").data('maxrows');
+            addRows(result.rows);
+            $(this).data("data_numrows", result.numrows);
+            if (result.rows.length < maxrows) {
+                $("#{{ key }}_foot").removeClass("d-none");
             }
-            $("#{{ key }}_btn_add").removeClass("d-none");
-            $(".remove_row").removeClass("d-none");
+            updateTableNumRow(result.rows.length);
+            updateActions(result.rows.length);
             $("#loader").addClass("d-none");
         },
     });
 
     $("#{{ key }}_btn_add").on("click", function () {
-        let num_rows = $("#{{  key  }}_body").data('num_rows');
+        let numrows = $("#{{  key  }}_body").data('numrows');
+        let maxrows = $("#{{  key  }}_body").data('maxrows');
+        let actions = $("#{{  key  }}_body").data('actions');
+
         $.ajax({
             type: "GET",
-            url: "/client/grid/{{ key }}/{{ id_form }}/" + num_rows + "newrow",
+            url: "/client/grid/{{ key }}/{{ id_form }}/" + actions + "/newrow",
             data: {},
             beforeSend: function () {
+                hideRemove();
                 $("#{{ key }}_foot").addClass("d-none");
                 $("#loader").removeClass("d-none");
-                $("#{{ key }}_btn_add").addClass("d-none");
             },
             error: function (e) {
                 $("#loader").addClass("d-none");
                 alert("Errore Interno conttatare Helpdesk", e);
             },
             success: function (result) {
-                addRows(result.line);
-                if (result.showAdd) {
+                if (numrows < maxrows) {
+                    addNewRow(result.row);
+                    let newnumrows = numrows + 1;
+                    updateTableNumRow(newnumrows);
+                    updateActions(1);
                     $("#{{ key }}_foot").removeClass("d-none");
                 }
+                showRemove();
                 $("#loader").addClass("d-none");
             },
         });
     });
+
+    function removeRow(rowid) {
+        hideRemove()
+        let numrows = $("#{{  key  }}_body").data('numrows');
+        let minrows = $("#{{  key  }}_body").data('minrows');
+        let maxrows = $("#{{  key  }}_body").data('maxrows');
+        let newrows = numrows - 1;
+        if (numrows > minrows) {
+            $(rowid).remove();
+            updateTableNumRow(newrows);
+        }
+        if (newrows > minrows) {
+            showRemove();
+        }
+        if (newrows < maxrows) {
+            $("#{{ key }}_foot").removeClass("d-none");
+        }
+    }
 
 
 </script>

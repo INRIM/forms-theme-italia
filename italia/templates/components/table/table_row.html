@@ -1,9 +1,10 @@
-<tr id="{{ row_id }}" class=" {{ rows_customClass }}">
+<tr id="{{ key }}" class=" {{ rows_customClass }} ">
+{#    <th scope="row">#{{ row_id+1 }}</th>#}
     {% for component in items %}
-        <td>{{ component.render(form_id, log=False)|safe }}</td>
+        <td class="mt-4">{{ component.render(form_id, log=False)|safe }}</td>
     {% endfor %}
-    <td class="remove_row" data-row_id="{{ row_id }}">
-        <button type="button" class="btn btn-danger btn-xs btn-icon">
+    <td class="remove_row d-none" data-row_id="{{ key }}">
+        <button type="button" class="btn btn-danger btn-xs btn-icon" onclick="removeRow({{ key }})">
                 <span class="rounded-icon rounded-danger">
                     <svg class="icon icon-white"><use
                             xlink:href="/static/svg/sprite.svg#it-close-circle"></use></svg>

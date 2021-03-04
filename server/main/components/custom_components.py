@@ -77,7 +77,7 @@ class Component:
     def hidden(self):
         return self.raw.get('hidden')
 
-    def make_config_new(self, component, id_form, disabled=False, cls_size=" col-lg-12 ", row=0):
+    def make_config_new(self, component, id_form, disabled=False, cls_size=" col-lg-12 "):
         cfg_map = form_io_default_map.copy()
         cfg = {}
         for key, value in component.items():
@@ -122,20 +122,19 @@ class Component:
         template = self.tmpe.get_template(name)
         return template.render(context)
 
-    def log_render(self, cfg, size="12", row=0):
+    def log_render(self, cfg, size="12"):
         print("-------------------------")
         print(self.key)
         print(size)
-        print(row)
         print("~~~~~~~~~~~~~~~~~~~~~~~~~")
         print(self.raw)
         print(cfg)
         print("-------------------------")
 
-    def render(self, id_form, size="12", row=0, log=False):
-        cfg = self.make_config_new(self.raw, id_form, self.builder.disabled, cls_size=f"col-lg-{size}", row=row)
+    def render(self, id_form, size="12", log=False):
+        cfg = self.make_config_new(self.raw, id_form, self.builder.disabled, cls_size=f"col-lg-{size}")
         if log:
-            self.log_render(cfg, size, row)
+            self.log_render(cfg, size)
         if self.key == "submit":
             return ""
         self.html_component = self.render_template(
@@ -392,6 +391,13 @@ class datagridRowComponent(Component):
         self.max_row = 1
         self.row_id = 0
 
+    def make_config_new(self, component, id_form, disabled=False, cls_size=" col-lg-12 "):
+        cfg = super(datagridRowComponent, self).make_config_new(
+            component, id_form, disabled=disabled, cls_size=cls_size
+        )
+        cfg['row_id'] = self.row_id
+        return cfg
+
 
 class datagridComponent(Component):
 
@@ -411,6 +417,14 @@ class datagridComponent(Component):
                 self.min_row = int(self.raw.get("validate").get("minLength"))
             if self.raw.get("validate").get("maxLength"):
                 self.max_row = int(self.raw.get("validate").get("maxLength"))
+
+    def make_config_new(self, component, id_form, disabled=False, cls_size=" col-lg-12 "):
+        cfg = super(datagridComponent, self).make_config_new(
+            component, id_form, disabled=disabled, cls_size=cls_size
+        )
+        cfg['min_rows'] = self.min_row
+        cfg['max_rows'] = self.max_row
+        return cfg
 
     @property
     def labels(self):
@@ -432,9 +446,6 @@ class datagridComponent(Component):
         numrow = self.min_row
         if self.value:
             numrow = len(self.value)
-        if numrow > self.max_row:
-            numrow = self.max_row
-            self.add_enabled = False
         for row_id in range(numrow):
             row = self.get_row(row_id)
             rows.append(row)
@@ -442,9 +453,10 @@ class datagridComponent(Component):
 
     def get_row(self, row_id):
         raw_row = OrderedDict()
-        raw_row["key"] = f"row_{row_id}"
+        raw_row["key"] = f"{self.key}_{row_id}"
         raw_row["type"] = "datagridRow"
         row = self.builder.get_component_object(raw_row)
+        row.row_id = row_id
         for component in self.component_items:
             # Copy component raw (dict), to ensure no binding and overwrite.
             component_raw = component.raw.copy()
@@ -457,6 +469,9 @@ class datagridComponent(Component):
                             component_obj.value = val
             row.component_items.append(component_obj)
         return row
+
+    def add_row(self, num_rows):
+        return self.get_row(num_rows)
 
 
 # Premium components

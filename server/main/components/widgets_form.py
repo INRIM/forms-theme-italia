@@ -136,9 +136,12 @@ class FormIoWidget(PageWidget):
                                     if sub3_node.key == key:
                                         return sub3_node
 
+    def load_data(self, data):
+        self.form_c = Form(data, self.builder)
+
     def make_form(self, data):
         # self.print_structure()
-        self.form_c = Form(data, self.builder)
+        self.load_data(data)
         self.title = self.schema['title']
         if "_id" in self.schema:
             self.name = self.schema['_id']
@@ -168,5 +171,35 @@ class FormIoWidget(PageWidget):
             template, values
         )
 
-    def render_component(self, component, cfg):
-        return self.render_template(f"{self.components_base_path}{component}", cfg)
+    # def render_component(self, component, cfg):
+    #     return self.render_template(f"{self.components_base_path}{component}", cfg)
+
+    def grid_rows(self, key, render=False, log=False):
+        results = {
+            "rows": [],
+            "showAdd": False
+        }
+        component = self.get_component_by_key(key)
+        rows = component.rows
+        results['showAdd'] = component.add_enabled
+        for row in rows:
+            if render:
+                results['rows'].append(row.render(self.name, log=log))
+            else:
+                results['rows'].append(row)
+        return results
+
+    def grid_add_row(self, key, num_rows, render=False, log=False):
+        results = {
+            "row": "",
+            "showAdd": False
+        }
+        component = self.get_component_by_key(key)
+        row = component.add_row(num_rows)
+        results['showAdd'] = component.add_enabled
+        if render:
+            results['row'] = row.render(self.name, log=log)
+            return results
+        else:
+            results['row'] = row
+            return results
