@@ -71,13 +71,14 @@ class Component:
 
     @value.setter
     def value(self, value):
+        print("Set Value ", self.key, value)
         self.form['value'] = value
 
     @property
     def hidden(self):
         return self.raw.get('hidden')
 
-    def make_config_new(self, component, id_form, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg_map = form_io_default_map.copy()
         cfg = {}
         for key, value in component.items():
@@ -110,11 +111,12 @@ class Component:
                     cfg[k] = v
         if "customClass" not in cfg:
             cfg['customClass'] = cls_size
-        if disabled:
-            cfg['disabled'] = disabled
+        cfg['disabled'] = disabled
         cfg['items'] = self.component_items
         cfg['id_form'] = id_form
-        cfg["value"] = self.value
+        cfg["id_submission"] = id_submission or ""
+        if self.value:
+            cfg["value"] = self.value
         return cfg
 
     def render_template(self, name: str, context: dict):
@@ -130,8 +132,8 @@ class Component:
         print(cfg)
         print("-------------------------")
 
-    def render(self, id_form, size="12", log=False):
-        cfg = self.make_config_new(self.raw, id_form, self.builder.disabled, cls_size=f"col-lg-{size}")
+    def render(self, id_form, id_submission, size="12", log=False):
+        cfg = self.make_config_new(self.raw, id_form, id_submission, disabled=self.builder.disabled, cls_size=f"col-lg-{size}")
         if log:
             self.log_render(cfg, size)
         if self.key == "submit":
@@ -139,6 +141,9 @@ class Component:
         self.html_component = self.render_template(
             f"{self.components_base_path}{formio_map[self.raw.get('type')]}", cfg)
         return self.html_component
+
+    def compute_data(self, data):
+        return data.copy()
 
 
 # global
@@ -390,9 +395,9 @@ class datagridRowComponent(Component):
         self.max_row = 1
         self.row_id = 0
 
-    def make_config_new(self, component, id_form, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(datagridRowComponent, self).make_config_new(
-            component, id_form, disabled=disabled, cls_size=cls_size
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['row_id'] = self.row_id
         return cfg
@@ -417,9 +422,9 @@ class datagridComponent(Component):
             if self.raw.get("validate").get("maxLength"):
                 self.max_row = int(self.raw.get("validate").get("maxLength"))
 
-    def make_config_new(self, component, id_form, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(datagridComponent, self).make_config_new(
-            component, id_form, disabled=disabled, cls_size=cls_size
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['min_rows'] = self.min_row
         cfg['max_rows'] = self.max_row
@@ -452,25 +457,56 @@ class datagridComponent(Component):
 
     def get_row(self, row_id):
         raw_row = OrderedDict()
-        raw_row["key"] = f"{self.key}_{row_id}"
+        raw_row["key"] = f"{self.key}_dataGridRow_{row_id}"
         raw_row["type"] = "datagridRow"
         row = self.builder.get_component_object(raw_row)
         row.row_id = row_id
         for component in self.component_items:
             # Copy component raw (dict), to ensure no binding and overwrite.
             component_raw = component.raw.copy()
-            component_raw['key'] = f"{component_raw.get('key')}_{row_id}"
+            component_raw['key'] = f"{self.key}_dataGridRow_{row_id}-{component_raw.get('key')}"
             component_obj = self.builder.get_component_object(component_raw)
             if self.value:
                 for row_dict in self.value:
                     for key, val in row_dict.items():
-                        if key == component_raw['key']:
+                        if key == component_obj.key:
                             component_obj.value = val
             row.component_items.append(component_obj)
         return row
 
     def add_row(self, num_rows):
         return self.get_row(num_rows)
+
+    def compute_data(self, data):
+        data = super(datagridComponent, self).compute_data(data)
+        c_keys = []
+        for component in self.component_items:
+            c_keys.append(component.key)
+        key = self.key
+        list_to_pop = []
+        new_dict = {
+            key: []
+        }
+        last_group = False
+        data_row = {}
+        for k, v in data.items():
+            if f"{key}_" in k:
+                list_to_pop.append(k)
+                list_keys = k.split("-")
+                if list_keys:
+                    groups = list_keys[0].split("_")
+                    if groups[2] != last_group:
+                        if last_group:
+                            new_dict[key].append(data_row.copy())
+                            data_row = {}
+                        last_group = groups[2]
+                    if list_keys[1] in c_keys:
+                        data_row[k] = data[k]
+        new_dict[key].append(data_row.copy())
+        for i in list_to_pop:
+            data.pop(i)
+        data = {**data, **new_dict}
+        return data.copy()
 
 
 # Premium components
@@ -511,8 +547,6 @@ class resourceComponent(Component):
         self.compute_resources()
 
     def compute_resources(self):
-        print("Eval Reource")
-
         resource_id = self.raw.get('resource')
         if resource_id and not resource_id == "":
             if not self.resources and self.resources_ext:
@@ -527,8 +561,6 @@ class resourceComponent(Component):
                         "label": label,
                         "value": item['_id']
                     })
-            print("End")
-            print(self.raw)
 
     @Component.value.setter
     def value(self, value):

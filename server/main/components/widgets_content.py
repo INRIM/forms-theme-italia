@@ -28,7 +28,7 @@ class PageWidget(WidgetsBase):
         else:
             user = False
         base_prj_data = {
-            "tocken": self.authtoken,
+            "token": self.authtoken,
             'app_name': self.settings.app_name,
             'version': self.settings.app_version,
             'env': "test",
@@ -47,3 +47,6 @@ class PageWidget(WidgetsBase):
         }
         kwargs_def = {**context, **base_prj_data}
         return self.response_template(template_name_or_list, kwargs_def)
+
+    def render_custom(self, tmpname, cfg):
+        return self.render_template(f"{tmpname}", cfg)

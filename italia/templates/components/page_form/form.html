@@ -5,7 +5,7 @@
       id="{{ id_form }}">
     <div id="{{ id_form }}_alert" class=" {{ customClass }}"></div>
     {% for component in items %}
-        {{ component.render(id_form)|safe }}
+        {{ component.render(id_form, id_submission)|safe }}
     {% endfor %}
     <div class="form-group text-center" id="btn_actions">
         {% if label %}

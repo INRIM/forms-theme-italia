@@ -1,4 +1,4 @@
-<table id="{{ key }}" class="{{ customClass }} table table-striped">
+<table id="{{ key }}" class="{{ customClass }} col-12 table-hover">
     <p>
         <span id="{{ key }}_numrows"></span>
         <span id="{{ key }}_numrowso" class="sr-only"></span>
@@ -10,7 +10,10 @@
     <tfoot id="{{ key }}_foot" class="">
     <tr id="{{ key }}_AddRow">
         <td colspan="5">
-            <button type="button" class="btn btn-primary btn-xs btn-icon" id="{{ key }}_btn_add">
+            <button type="button" class="btn btn-primary btn-xs btn-icon"
+                    id="{{ key }}_btn_add"
+                    {% if  disabled %} disabled {%  endif  %}
+            >
                     <span class="rounded-icon rounded-primary">
                         <svg class="icon icon-white"><use
                                 xlink:href="/static/svg/sprite.svg#it-plus-circle"></use></svg>
@@ -35,6 +38,12 @@
             addRow(rows[item]);
         }
         $("#{{ key }}_body").append($("#{{ key }}_foot"));
+        $("input[type=text]").each(function () {
+            var label = $("label[for='" + $(this).attr('id') + "']");
+            label.addClass("active");
+        });
+        $('form').find('*').filter(':input:visible:first').focus();
+        {#$('form').find('*').filter(':input:visible:first').select();#}
     };
 
     function addNewRow(row) {
@@ -70,7 +79,7 @@
 
     $.ajax({
         type: "GET",
-        url: "/client/grid/{{ key }}/{{ id_form }}/rows",
+        url: "/client/grid/{{ key }}/{{ id_form }}/rows/{{ id_submission }}",
         data: {},
         beforeSend: function () {
             $("#loader").removeClass("d-none");
@@ -85,7 +94,9 @@
             addRows(result.rows);
             $(this).data("data_numrows", result.numrows);
             if (result.rows.length < maxrows) {
+
                 $("#{{ key }}_foot").removeClass("d-none");
+
             }
             updateTableNumRow(result.rows.length);
             updateActions(result.rows.length);

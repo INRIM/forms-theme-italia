@@ -147,7 +147,7 @@ form_io_default_map = {
     "defaultValue": "value",
     "disabled": "disabled",
     "values": "rows",
-    "validation": {"required": "required"},
+    "validate": {"required": "required"},
     "propery": {"onchange": "onchange"},
 }
 

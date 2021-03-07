@@ -90,6 +90,7 @@ class FormIoWidget(PageWidget):
         self.api_action = "/"
         self.curr_row = []
         self.schema = schema
+        self.submission_id = ""
         self.form_name = ""
         self.builder = CustomBuilder(
             self.schema, resources_ext=self.ext_resource,
@@ -136,6 +137,25 @@ class FormIoWidget(PageWidget):
                                     if sub3_node.key == key:
                                         return sub3_node
 
+    def compute_component_data(self, form_data):
+        data = form_data.copy()
+        for node in self.builder.main.component_items:
+            data = node.compute_data(data)
+            if node.component_items:
+                for sub_node in node.component_items:
+                    data = sub_node.compute_data(data)
+                    if sub_node.multi_row:
+                        for row in sub_node.grid_rows:
+                            for sub3_node in row:
+                                data = sub3_node.compute_data(data)
+                    elif sub_node.component_items:
+                        for sub2_node in sub_node.component_items:
+                            data = sub2_node.compute_data(data)
+                            if sub2_node.component_items:
+                                for sub3_node in sub2_node.component_items:
+                                    data = sub3_node.compute_data(data)
+        return data
+
     def load_data(self, data):
         self.form_c = Form(data, self.builder)
 
@@ -159,6 +179,7 @@ class FormIoWidget(PageWidget):
             "api_action": self.api_action,
             "label": self.label,
             "id_form": self.name,
+            "id_submission": self.submission_id,
             "disabled": self.disabled
         }
 
@@ -166,8 +187,7 @@ class FormIoWidget(PageWidget):
             template, values
         )
 
-    # def render_component(self, component, cfg):
-    #     return self.render_template(f"{self.components_base_path}{component}", cfg)
+
 
     def grid_rows(self, key, render=False, log=False):
         results = {
@@ -179,7 +199,7 @@ class FormIoWidget(PageWidget):
         results['showAdd'] = component.add_enabled
         for row in rows:
             if render:
-                results['rows'].append(row.render(self.name, log=log))
+                results['rows'].append(row.render(self.name, self.submission_id, log=log))
             else:
                 results['rows'].append(row)
         return results
@@ -193,7 +213,7 @@ class FormIoWidget(PageWidget):
         row = component.add_row(num_rows)
         results['showAdd'] = component.add_enabled
         if render:
-            results['row'] = row.render(self.name, log=log)
+            results['row'] = row.render(self.name, "", log=log)
             return results
         else:
             results['row'] = row
