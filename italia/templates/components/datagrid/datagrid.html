@@ -38,7 +38,7 @@
             addRow(rows[item]);
         }
         $("#{{ key }}_body").append($("#{{ key }}_foot"));
-        $("input[type=text]").each(function () {
+        $(":input").each(function () {
             var label = $("label[for='" + $(this).attr('id') + "']");
             label.addClass("active");
         });

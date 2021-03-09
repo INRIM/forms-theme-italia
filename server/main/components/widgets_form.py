@@ -6,7 +6,7 @@ from formiodata.form import Form
 from .base_config_components import *
 from . import custom_components
 import logging
-
+import uuid
 from .widgets_content import PageWidget
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class CustomBuilder(Builder):
         self.tmpe = kwargs.get('template_engine', False)
         self.disabled = kwargs.get('disabled', False)
         self.components_base_path = kwargs.get('components_base_path', False)
-
+        self.settings = kwargs.get('settings', False)
         super(CustomBuilder, self).__init__(schema_json, **kwargs)
 
     def load_components(self):
@@ -37,6 +37,16 @@ class CustomBuilder(Builder):
                 if is_columns:
                     component['type'] = 'column'
                 component_obj = self.get_component_object(component)
+                # component_obj.load(None, None)
+
+                self.component_ids[component_obj.id] = component_obj
+
+                if parent:
+                    component_obj.parent = parent
+
+                component_obj.id = component.get('id', str(uuid.uuid4()))
+                self.component_ids[component_obj.id] = component_obj
+
                 component['_object'] = component_obj
                 if component.get('key') and component.get('input'):
                     self.form_components[component.get('key')] = component_obj
@@ -95,12 +105,12 @@ class FormIoWidget(PageWidget):
         self.builder = CustomBuilder(
             self.schema, resources_ext=self.ext_resource,
             template_engine=templates_engine, components_base_path=self.components_base_path,
-            disabled=self.disabled
+            disabled=self.disabled, settings=settings
         )
 
     def print_structure(self):
         for node in self.builder.main.component_items:
-            print(node, node.key)
+            print(node, node.key, node.raw.get("tableView"), "---")
             if node.component_items:
                 for sub_node in node.component_items:
                     print("--->", sub_node, sub_node.key)
@@ -189,9 +199,6 @@ class FormIoWidget(PageWidget):
             template, values
         )
 
-    # def render_component(self, component, cfg):
-    #     return self.render_template(f"{self.components_base_path}{component}", cfg)
-
     def grid_rows(self, key, render=False, log=False):
         results = {
             "rows": [],
@@ -201,6 +208,7 @@ class FormIoWidget(PageWidget):
         rows = component.rows
         results['showAdd'] = component.add_enabled
         for row in rows:
+            logger.info(row)
             if render:
                 results['rows'].append(row.render(self.name, self.submission_id, log=log))
             else:
@@ -221,4 +229,3 @@ class FormIoWidget(PageWidget):
         else:
             results['row'] = row
             return results
-

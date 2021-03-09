@@ -4,28 +4,25 @@
 import json
 from collections import OrderedDict
 
+from formiodata.components import Component
 from formiodata.utils import base64_encode_url, decode_resource_template, fetch_dict_get_value
+
+from .DateEngine import DateEngine
 from .base_config_components import *
 import copy
 
+import uuid
 
-class Component:
+
+class CustomComponent(Component):
 
     def __init__(self, raw, builder, **kwargs):
         # TODO or provide the Builder object?
+        super(CustomComponent, self).__init__(raw, builder, **kwargs)
         self.raw = copy.deepcopy(raw)
-        self.builder = builder
-        self.form = {}
 
         # i18n (language, translations)
-        self.language = kwargs.get('language', 'en')
-        self.i18n = kwargs.get('i18n', {})
-        self.resources = kwargs.get('resources', False)
-        self.resources_ext = kwargs.get('resources_ext', False)
-        if self.resources and isinstance(self.resources, str):
-            self.resources = json.loads(self.resources)
-        self.html_component = ""
-        self.defaultValue = self.raw.get('defaultValue')
+
         self.tmpe = builder.tmpe
         self.components_base_path = builder.components_base_path
         self.component_items = []
@@ -35,52 +32,6 @@ class Component:
         self.multi_row = False
         self.grid_rows = []
         self.size = 12
-
-    @property
-    def key(self):
-        return self.raw.get('key')
-
-    @key.setter
-    def key(self, value):
-        self.raw['key'] = value
-
-    @property
-    def type(self):
-        return self.raw.get('type')
-
-    @property
-    def input(self):
-        return self.raw.get('input')
-
-    @property
-    def properties(self):
-        return self.raw.get('properties')
-
-    @property
-    def label(self):
-        label = self.raw.get('label')
-        if self.i18n.get(self.language):
-            return self.i18n[self.language].get(label, label)
-        else:
-            return label
-
-    @label.setter
-    def label(self, value):
-        if self.raw.get('label'):
-            self.raw['label'] = value
-
-    @property
-    def value(self):
-        return self.form.get('value')
-
-    @value.setter
-    def value(self, value):
-        print("Set Value ", self.key, value)
-        self.form['value'] = value
-
-    @property
-    def hidden(self):
-        return self.raw.get('hidden')
 
     def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg_map = form_io_default_map.copy()
@@ -126,13 +77,13 @@ class Component:
         return template.render(context)
 
     def log_render(self, cfg, size="12"):
-        print("-------------------------")
-        print(self.key)
-        print(size)
-        print("~~~~~~~~~~~~~~~~~~~~~~~~~")
-        print(self.raw)
-        print(cfg)
-        print("-------------------------")
+        logger.info("-------------------------")
+        logger.info(self.key)
+        logger.info(size)
+        logger.info("~~~~~~~~~~~~~~~~~~~~~~~~~")
+        logger.info(self.raw)
+        logger.info(cfg)
+        logger.info("-------------------------")
 
     def render(self, id_form, id_submission, size="12", log=False):
         cfg = self.make_config_new(self.raw, id_form, id_submission, disabled=self.builder.disabled,
@@ -150,43 +101,40 @@ class Component:
 
 
 # global
-
-class formComponent(Component):
+class formComponent(CustomComponent):
     pass
 
 
-# Basic
-
-class textfieldComponent(Component):
+class textfieldComponent(CustomComponent):
     pass
 
 
-class textareaComponent(Component):
+class textareaComponent(CustomComponent):
     pass
 
 
-class numberComponent(Component):
+class numberComponent(CustomComponent):
     pass
 
 
-class passwordComponent(Component):
-    pass
-
-
-class checkboxComponent(Component):
-    pass
-
-
-class infoComponent(Component):
-    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+class infoComponent(CustomComponent):
+    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(infoComponent, self).make_config_new(
-            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['customClass'] = f" col-lg-{self.size} "
         return cfg
 
 
-class selectboxesComponent(Component):
+class passwordComponent(CustomComponent):
+    pass
+
+
+class checkboxComponent(CustomComponent):
+    pass
+
+
+class selectboxesComponent(CustomComponent):
 
     @property
     def values_labels(self):
@@ -204,7 +152,7 @@ class selectboxesComponent(Component):
         return values_labels
 
 
-class selectComponent(Component):
+class selectComponent(CustomComponent):
 
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
@@ -230,7 +178,7 @@ class selectComponent(Component):
                         "value": item['_id']
                     })
 
-    @Component.value.setter
+    @CustomComponent.value.setter
     def value(self, value):
         if self.template_label_keys and isinstance(value, dict):
             self.form['value'] = value.get('_id', value)
@@ -273,7 +221,7 @@ class selectComponent(Component):
         return self.raw.get('data').get('values')
 
 
-class radioComponent(Component):
+class radioComponent(CustomComponent):
 
     @property
     def values_labels(self):
@@ -306,44 +254,120 @@ class radioComponent(Component):
             return False
 
 
-class buttonComponent(Component):
+class buttonComponent(CustomComponent):
     pass
 
 
 # Advanced
 
-class emailComponent(Component):
+class emailComponent(CustomComponent):
     pass
 
 
-class urlComponent(Component):
+class urlComponent(CustomComponent):
     pass
 
 
-class phoneNumberComponent(Component):
+class phoneNumberComponent(CustomComponent):
     pass
 
 
 # TODO: tags, address
 
 
-class datetimeComponent(Component):
+class datetimeComponent(CustomComponent):
+
+    def __init__(self, raw, builder, **kwargs):
+        super().__init__(raw, builder, **kwargs)
+        self.headers = []
+        self.is_date = self.raw.get('enableDate', True)
+        self.is_time = self.raw.get('enableTime', True)
+        self.min = self.raw['widget']['minDate']
+        self.max = self.raw['widget']['maxDate']
+        self.client_format = self.builder.settings.ui_date_mask
+        self.value_date = ""
+        self.value_time = ""
+        self.value_datetime = ""
+        self.dte = DateEngine(
+            UI_DATETIME_MASK=self.builder.settings.ui_datetime_mask,
+            SERVER_DTTIME_MASK=self.builder.settings.server_datetime_mask
+        )
+        self.size = 12
+
+    def _encode_value(self, value):
+        return value
+
+    @property
+    def value(self):
+        return self.form.get('value')
+
+    @value.setter
+    def value(self, value):
+        self.form['value'] = value
+        if self.is_date and self.is_time and value:
+            date_v = value.split(" ")[0]
+            if len(value.split(" ")) > 1:
+                time_v = value.split(" ")[1]
+            else:
+                time_v = "00:00"
+            self.value_date = self.dte.server_date_to_ui_date_str(date_v)
+            self.value_time = f"{time_v}"
+        elif self.is_date and value:
+            self.value_date = self.dte.server_date_to_ui_date_str(value)
+        elif self.is_time and value:
+            self.value_time = f"{value}"
+
+    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+        cfg = super(datetimeComponent, self).make_config_new(
+            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
+        )
+        cfg['value_date'] = self.value_date
+        cfg['value_time'] = self.value_time
+        if ":" in self.value_time:
+            cfg['value_time_H'] = self.value_time.split(":")[0]
+            cfg['value_time_M'] = self.value_time.split(":")[1]
+        cfg['is_time'] = self.is_time
+        cfg['is_date'] = self.is_date
+        cfg['min'] = self.min
+        cfg['max'] = self.max
+        cfg['client_format'] = self.client_format
+        cfg['customClass'] = f" col-lg-{self.size} "
+        return cfg
+
+    def compute_data(self, data):
+        data = super(datetimeComponent, self).compute_data(data)
+        new_dict = self.default_data.copy()
+        datek = f"{self.key}-date"
+        timek = f"{self.key}-time"
+        if self.is_date and self.is_time:
+            new_dict[self.key] = self.dte.ui_datetime_to_server_datetime_str(
+                f"{data[datek]} {data[timek]}")
+            data.pop(datek)
+            data.pop(timek)
+        elif self.is_date:
+            new_dict[self.key] = self.dte.ui_date_to_server_date_str(
+                f"{data[datek]}")
+            data.pop(datek)
+        elif self.is_time:
+            new_dict[self.key] = f"{data[timek]}"
+            data.pop(timek)
+        data = {**data, **new_dict}
+        return data.copy()
+
+
+class dateComponent(CustomComponent):
     pass
 
 
-class dateComponent(Component):
+class timeComponent(CustomComponent):
     pass
 
 
-class timeComponent(Component):
+class currencyComponent(CustomComponent):
     pass
 
 
-class currencyComponent(Component):
-    pass
-
-
-class surveyRowComponent(Component):
+class surveyRowComponent(CustomComponent):
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
         self.headers = []
@@ -353,16 +377,16 @@ class surveyRowComponent(Component):
         self.row_id = 0
         self.size = 12
 
-    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(surveyRowComponent, self).make_config_new(
-            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['row_id'] = self.row_id
         cfg['customClass'] = f" col-lg-{self.size} "
         return cfg
 
 
-class surveyComponent(Component):
+class surveyComponent(CustomComponent):
 
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
@@ -436,42 +460,42 @@ class surveyComponent(Component):
         return data.copy()
 
 
-class signatureComponent(Component):
+class signatureComponent(CustomComponent):
     pass
 
 
 # Layout components
 
-class htmlelementComponent(Component):
+class htmlelementComponent(CustomComponent):
     pass
 
 
-class contentComponent(Component):
+class contentComponent(CustomComponent):
     pass
 
 
-class columnsComponent(Component):
+class columnsComponent(CustomComponent):
     pass
 
 
-class columnComponent(Component):
+class columnComponent(CustomComponent):
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
         self.size = self.raw['width']
 
 
-class fieldsetComponent(Component):
+class fieldsetComponent(CustomComponent):
     pass
 
 
-class panelComponent(Component):
+class panelComponent(CustomComponent):
 
     @property
     def title(self):
-        component = self.builder.components.get(self.key)
-        title = component.raw.get('title')
+        CustomComponent = self.builder.components.get(self.key)
+        title = CustomComponent.raw.get('title')
         if not title:
-            title = component.raw.get('label')
+            title = CustomComponent.raw.get('label')
 
         if self.i18n.get(self.language):
             return self.i18n[self.language].get(title, title)
@@ -479,17 +503,17 @@ class panelComponent(Component):
             return title
 
 
-class tableComponent(Component):
+class tableComponent(CustomComponent):
     pass
 
 
-class tabsComponent(Component):
+class tabsComponent(CustomComponent):
     pass
 
 
 # Data components
 
-class datagridRowComponent(Component):
+class datagridRowComponent(CustomComponent):
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
         self.headers = []
@@ -498,15 +522,15 @@ class datagridRowComponent(Component):
         self.max_row = 1
         self.row_id = 0
 
-    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(datagridRowComponent, self).make_config_new(
-            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['row_id'] = self.row_id
         return cfg
 
 
-class datagridComponent(Component):
+class datagridComponent(CustomComponent):
 
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
@@ -528,9 +552,9 @@ class datagridComponent(Component):
             if self.raw.get("validate").get("maxLength"):
                 self.max_row = int(self.raw.get("validate").get("maxLength"))
 
-    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(datagridComponent, self).make_config_new(
-            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['min_rows'] = self.min_row
         cfg['max_rows'] = self.max_row
@@ -567,9 +591,9 @@ class datagridComponent(Component):
         raw_row["type"] = "datagridRow"
         row = self.builder.get_component_object(raw_row)
         row.row_id = row_id
-        for component in self.component_items:
-            # Copy component raw (dict), to ensure no binding and overwrite.
-            component_raw = component.raw.copy()
+        for CustomComponent in self.component_items:
+            # Copy CustomComponent raw (dict), to ensure no binding and overwrite.
+            component_raw = CustomComponent.raw.copy()
             component_raw['key'] = f"{self.key}_dataGridRow_{row_id}-{component_raw.get('key')}"
             component_obj = self.builder.get_component_object(component_raw)
             if self.value:
@@ -586,8 +610,8 @@ class datagridComponent(Component):
     def compute_data(self, data):
         data = super(datagridComponent, self).compute_data(data)
         c_keys = []
-        for component in self.component_items:
-            c_keys.append(component.key)
+        for CustomComponent in self.component_items:
+            c_keys.append(CustomComponent.key)
         key = self.key
         list_to_pop = []
         new_dict = self.default_data.copy()
@@ -615,7 +639,7 @@ class datagridComponent(Component):
 
 # Premium components
 
-class fileComponent(Component):
+class fileComponent(CustomComponent):
 
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
@@ -641,7 +665,7 @@ class fileComponent(Component):
             return super().value
 
 
-class resourceComponent(Component):
+class resourceComponent(CustomComponent):
 
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
@@ -666,7 +690,7 @@ class resourceComponent(Component):
                         "value": item['_id']
                     })
 
-    @Component.value.setter
+    @CustomComponent.value.setter
     def value(self, value):
         if self.template_label_keys and isinstance(value, dict):
             self.form['value'] = value.get('_id', value)

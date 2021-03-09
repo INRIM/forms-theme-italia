@@ -30,34 +30,49 @@ class DateEngine():
         self.server_datetime_mask = SERVER_DTTIME_MASK
         self.tz = pytz.timezone(str(pytz.timezone(str(TZ))))
 
-    def get_date_from_server(self, date_to_parse):
-        date_to_parse = datetime.strptime(
+    def get_date_from_server(self, date_to_parse) -> date:
+        parsed = datetime.strptime(
             date_to_parse, self.server_date_mask).date()
-        return date_to_parse
+        return parsed
 
-    def ui_date_to_server_date_str(self, date_to_parse):
-        date_to_parse = datetime.strptime(
+    def ui_date_to_server_date_str(self, date_to_parse) -> str:
+        parsed = datetime.strptime(
             date_to_parse, self.client_date_mask).date().strftime(self.server_date_mask)
-        return date_to_parse
+        return parsed
 
-    def get_server_datetime_now(self):
+    def server_date_to_ui_date_str(self, date_to_parse) -> str:
+        parsed = datetime.strptime(
+            date_to_parse, self.server_date_mask).date().strftime(self.client_date_mask)
+        return parsed
+
+    def ui_datetime_to_server_datetime_str(self, date_to_parse) -> str:
+        parsed = datetime.strptime(
+            date_to_parse, self.client_datetime_mask).strftime(self.server_datetime_mask)
+        return parsed
+
+    def server_datetime_to_ui_datetime_str(self, date_to_parse) -> str:
+        parsed = datetime.strptime(
+            date_to_parse, self.server_datetime_mask).strftime(self.client_datetime_mask)
+        return parsed
+
+    def get_server_datetime_now(self) -> str:
         return datetime.now().astimezone(self.tz).strftime(self.server_datetime_mask)
 
-    def get_server_datetime_now_tz(self):
+    def get_server_datetime_now_tz(self) -> str:
         return datetime.now().astimezone(
             self.tz).strftime(self.server_datetime_mask)
 
-    def strdate_ui_to_date(self, date_to_parse):
+    def strdate_ui_to_date(self, date_to_parse) -> date:
         date_to_parse = datetime.strptime(
             date_to_parse, self.client_date_mask).date()
         return date_to_parse
 
-    def strdatetime_ui_to_datetime(self, datetime_to_parse):
+    def strdatetime_ui_to_datetime(self, datetime_to_parse) -> datetime:
         date_to_parse = datetime.strptime(
             datetime_to_parse, self.client_date_mask)
         return date_to_parse
 
-    def strdate_serve_to_date(self, date_to_parse):
+    def strdate_serve_to_date(self, date_to_parse) -> date:
         date_to_parse = datetime.strptime(
             date_to_parse, self.server_date_mask).date()
         return date_to_parse
