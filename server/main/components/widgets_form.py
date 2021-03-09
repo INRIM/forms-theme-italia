@@ -38,9 +38,6 @@ class CustomBuilder(Builder):
                     component['type'] = 'column'
                 component_obj = self.get_component_object(component)
                 # component_obj.load(None, None)
-
-                self.component_ids[component_obj.id] = component_obj
-
                 if parent:
                     component_obj.parent = parent
 
@@ -89,6 +86,21 @@ class CustomBuilder(Builder):
             return False
 
 
+class CustomForm(Form):
+
+    def load_components(self):
+        for component in self.builder.main.component_items:
+            self._load_components(component)
+
+    def _load_components(self, component):
+        component.value = self.form.get(component.key, component.defaultValue)
+        if not component.survey and not component.multi_row and component.component_items:
+            for sub_component in component.component_items:
+                self._load_components(sub_component)
+        if component.survey:
+            component.eval_rows()
+
+
 class FormIoWidget(PageWidget):
 
     def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False, **kwargs):
@@ -110,20 +122,20 @@ class FormIoWidget(PageWidget):
 
     def print_structure(self):
         for node in self.builder.main.component_items:
-            print(node, node.key, node.raw.get("tableView"), "---")
+            print(node, node.key, node.value, "---")
             if node.component_items:
                 for sub_node in node.component_items:
-                    print("--->", sub_node, sub_node.key)
+                    print("--->", sub_node, sub_node.key, sub_node.value)
                     if sub_node.multi_row:
                         for row in sub_node.grid_rows:
                             for sub3_node in row:
-                                print("------------->", sub3_node, sub3_node.key)
+                                print("------------->", sub3_node, sub3_node.key, sub3_node.value)
                     elif sub_node.component_items:
                         for sub2_node in sub_node.component_items:
-                            print("-------->", sub2_node, sub2_node.key)
+                            print("-------->", sub2_node, sub2_node.key, sub2_node.value)
                             if sub2_node.component_items:
                                 for sub3_node in sub2_node.component_items:
-                                    print("------------->", sub3_node, sub3_node.key)
+                                    print("------------->", sub3_node, sub3_node.key, sub3_node.value)
 
     def get_component_by_key(self, key):
         for node in self.builder.main.component_items:
@@ -167,15 +179,15 @@ class FormIoWidget(PageWidget):
         return data
 
     def load_data(self, data):
-        self.form_c = Form(data, self.builder)
+        self.form_c = CustomForm(data, self.builder)
 
     def make_form(self, data):
-        self.print_structure()
         self.load_data(data)
+        self.print_structure()
         self.title = self.schema['title']
         self.name = self.schema['name']
         self.form_id = self.schema['id']
-        submit = self.form_c.components.get("submit")
+        submit = self.builder.components.get("submit")
         if submit:
             self.label = submit.label
         return self.render_form()
@@ -184,6 +196,7 @@ class FormIoWidget(PageWidget):
         template = f"{self.components_base_path}{formio_map[self.builder.main.type]}"
         values = {
             "items": self.builder.main.component_items,
+            # "items": self.builder.form_components,
             # "component": self.builder.main,
             "title": self.title,
             "cls_title": self.cls_title,

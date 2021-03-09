@@ -29,13 +29,23 @@ class CustomComponent(Component):
         self.default_data = {
             self.key: ""
         }
+        self.survey = False
         self.multi_row = False
         self.grid_rows = []
         self.size = 12
 
+    @property
+    def value(self):
+        return self.form.get('value')
+
+    @value.setter
+    def value(self, value):
+        self.form['value'] = value
+
     def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg_map = form_io_default_map.copy()
         cfg = {}
+        cvalue = self.value
         for key, value in component.items():
             if key not in cfg_map:
                 cfg[key] = value
@@ -68,8 +78,8 @@ class CustomComponent(Component):
         cfg['items'] = self.component_items
         cfg['id_form'] = id_form
         cfg["id_submission"] = id_submission or ""
-        if self.value:
-            cfg["value"] = self.value
+        if cvalue:
+            cfg["value"] = cvalue
         return cfg
 
     def render_template(self, name: str, context: dict):
@@ -79,15 +89,15 @@ class CustomComponent(Component):
     def log_render(self, cfg, size="12"):
         logger.info("-------------------------")
         logger.info(self.key)
-        logger.info(size)
+        logger.info(self.value)
         logger.info("~~~~~~~~~~~~~~~~~~~~~~~~~")
-        logger.info(self.raw)
-        logger.info(cfg)
+        logger.info(self.form)
         logger.info("-------------------------")
 
     def render(self, id_form, id_submission, size="12", log=False):
-        cfg = self.make_config_new(self.raw, id_form, id_submission, disabled=self.builder.disabled,
-                                   cls_size=f"col-lg-{size}")
+        cfg = self.make_config_new(
+            self.raw, id_form, id_submission, disabled=self.builder.disabled,
+            cls_size=f"col-lg-{size}")
         if log:
             self.log_render(cfg, size)
         if self.key == "submit":
@@ -294,28 +304,25 @@ class datetimeComponent(CustomComponent):
         )
         self.size = 12
 
-    def _encode_value(self, value):
-        return value
-
     @property
     def value(self):
         return self.form.get('value')
 
     @value.setter
-    def value(self, value):
-        self.form['value'] = value
-        if self.is_date and self.is_time and value:
-            date_v = value.split(" ")[0]
-            if len(value.split(" ")) > 1:
-                time_v = value.split(" ")[1]
+    def value(self, vals):
+        self.form['value'] = vals
+        if self.is_date and self.is_time and vals:
+            date_v = vals.split(" ")[0]
+            if len(vals.split(" ")) > 1:
+                time_v = vals.split(" ")[1]
             else:
                 time_v = "00:00"
             self.value_date = self.dte.server_date_to_ui_date_str(date_v)
             self.value_time = f"{time_v}"
-        elif self.is_date and value:
-            self.value_date = self.dte.server_date_to_ui_date_str(value)
-        elif self.is_time and value:
-            self.value_time = f"{value}"
+        elif self.is_date and vals:
+            self.value_date = self.dte.server_date_to_ui_date_str(vals)
+        elif self.is_time and vals:
+            self.value_time = f"{vals}"
 
     def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(datetimeComponent, self).make_config_new(
@@ -391,7 +398,7 @@ class surveyComponent(CustomComponent):
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
         self.headers = []
-        self.multi_row = False
+        self.survey = True
         self.row_id = 0
         self.default_data = {
             self.key: {}
