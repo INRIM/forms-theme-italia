@@ -4,13 +4,13 @@
     {% endif %}
     {% for item in rows %}
         <div class="form-check {{ item.customClass }} {% if inline %} form-check-inline {% endif %} ">
-            <input type="radio" name="{{ key }}" id="{{ item.value }}"
+            <input type="radio" name="{{ key }}" id="{{ key }}-{{ item.value }}"
                     {% if item.required %} required {% endif %}
                     {% if item.value==value %} checked {% endif %}
                     {% if disabled %} disabled {% endif %}
                    value="{{ item.value }}"
             >
-            <label for="{{ item.value }}">{{ item.label|safe }}</label>
+            <label for="{{ key }}-{{ item.value }}">{{ item.label|safe }}</label>
         </div>
     {% endfor %}
 </div>

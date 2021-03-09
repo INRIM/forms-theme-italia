@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class TableWidget(PageWidget):
 
-    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False, **kwargs):
+    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False,**kwargs):
         super(TableWidget, self).__init__(
             templates_engine, request, settings, schema=schema, resource_ext=resource_ext,
             disabled=disabled, **kwargs

@@ -1,0 +1,7 @@
+<div id="{{ key }}" class="row {{ customClass }} ">
+{#    info_readonly_block#}
+{#    form_radio#}
+    {% for component in items %}
+        <td class="">{{ component.render(form_id, id_submission, log=False)|safe }}</td>
+    {% endfor %}
+</div>

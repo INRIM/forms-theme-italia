@@ -160,10 +160,11 @@ class FormIoWidget(PageWidget):
         self.form_c = Form(data, self.builder)
 
     def make_form(self, data):
-        # self.print_structure()
+        self.print_structure()
         self.load_data(data)
         self.title = self.schema['title']
-        self.name = self.schema['id']
+        self.name = self.schema['name']
+        self.form_id = self.schema['id']
         submit = self.form_c.components.get("submit")
         if submit:
             self.label = submit.label
@@ -178,7 +179,8 @@ class FormIoWidget(PageWidget):
             "cls_title": self.cls_title,
             "api_action": self.api_action,
             "label": self.label,
-            "id_form": self.name,
+            "name": self.name,
+            "id_form": self.form_id,
             "id_submission": self.submission_id,
             "disabled": self.disabled
         }
@@ -187,7 +189,8 @@ class FormIoWidget(PageWidget):
             template, values
         )
 
-
+    # def render_component(self, component, cfg):
+    #     return self.render_template(f"{self.components_base_path}{component}", cfg)
 
     def grid_rows(self, key, render=False, log=False):
         results = {
@@ -218,3 +221,18 @@ class FormIoWidget(PageWidget):
         else:
             results['row'] = row
             return results
+
+    def survey_rows(self, key, render=False, log=False):
+        results = {
+            "rows": [],
+            "showAdd": False
+        }
+        component = self.get_component_by_key(key)
+        component.eval_rows()
+        rows = component.rows
+        for row in rows:
+            if render:
+                results['rows'].append(row.render(self.name, self.submission_id, log=log))
+            else:
+                results['rows'].append(row)
+        return results

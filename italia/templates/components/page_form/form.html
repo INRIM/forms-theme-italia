@@ -34,7 +34,7 @@
                 var data = $(this).serializeArray();
                 $.ajax({
                     type: "POST",
-                    url: "/client/{{ id_form }}",
+                    url: "{{ api_action }}",
                     data: data,
                     beforeSend: function () {
                         $("#loader").removeClass("d-none");

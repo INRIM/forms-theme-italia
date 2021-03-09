@@ -41,5 +41,4 @@ class TableFormWidget(TableWidget):
             if component.raw.get('tableView') and component.raw.get('type') and not component.raw.get(
                     'tableView') == "dataGrid":
                 cols[component.key] = component.label
-        print("get_columns", cols)
         return collections.OrderedDict(cols.copy())

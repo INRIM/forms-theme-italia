@@ -3,9 +3,11 @@
     <link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css'>
     <link rel='stylesheet' href='https://cdn.form.io/formiojs/formio.full.min.css'>
     <script src='https://cdn.form.io/formiojs/formio.full.min.js'></script>
+
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"
             integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
             crossorigin="anonymous"></script>
+    <script src='https://cdn.jsdelivr.net/npm/jquery-validation@1.19.3/dist/jquery.validate.js'></script>
 </head>
 <body>
 <div class="row card card-body bg-light mt-4">
@@ -13,12 +15,15 @@
         <div id="form-group-title" class="form-group">
             <label for="title" class="control-label">Titolo</label>
             <input type="text" class="form-control"
-                   id="title" name="title" placeholder="Enter the form title">
+                   id="title" name="title" placeholder="Enter the form title" required
+                   value="{{ title }}"
+            >
         </div>
         <div id="form-group-name" class="form-group">
             <label for="name" class="control-label">Name</label>
             <input type="text" class="form-control  "
-                   id="name" name="name" placeholder="Enter the form machine name">
+                   id="name" name="name" placeholder="Enter the form machine name" required
+                   value="{{ name }}">
         </div>
         <div class="row">
             <div class="col col-sm-4">
@@ -38,34 +43,62 @@
                     </select>
                 </div>
             </div>
-            <div class="col col-sm-4">
-                <div id="form-group-tags" class="form-group">
-                    <label for="tags" class="control-label">Tags</label>
-                    <input name="tags" id="tags"
-                           class=" ng-valid ng-isolate-scope ng-valid-max-tags ng-valid-min-tags ng-valid-leftover-text ng-empty ng-touched"/>
-                </div>
-            </div>
         </div>
         <input type="hidden" ng-model="form.type" autocomplete="off"
                class=" ng-untouched ng-valid ng-not-empty">
 
 
-        <div id="builder"></div>
+        <div class="col-lg-12">
+            <div id="builder"></div>
+        </div>
+        <div class="row mt-2 mb-2 ">
 
-        <input type="textarea" id="json" name="components" disabled autocomplete="off" class=" ">
-        <button type="submit">Save</button>
+            {% for btn in action_buttons %}
+                <div class=" {{ btn['cls'] }} col-lg-2 " id="{{ btn['id'] }}">
+                    <button type="button" class="btn btn-warning btn-md">
+                        <span class="sr-only">{{ btn['label'] }}</span>
+                        {% if btn['icon'] %}
+                            <svg class="icon" width="32" height="32">
+                                <use xlink:href="/static/svg/sprite.svg#{{ btn['icon'] }}"></use>
+                            </svg>
+                            <span>{{ btn['label'] }}</span>
+                        {% else %}
+                            {{ btn['label'] }}
+                        {% endif %}
+                    </button>
+                </div>
+            {% endfor %}
+            {% if not preview_link == "" %}
+                <div class=" col-lg-2 " id="preview">
+                    <button onclick="parent.gotolink('{{ preview_link }}')" type="button"
+                            class="btn btn-warning btn-md">
+                        <span class="sr-only">Anteprima</span>
+                        <svg class="icon" width="32" height="32">
+                            <use xlink:href="/static/svg/sprite.svg#it-piattaforme"></use>
+                        </svg>
+                        <span>Preview</span>
+                    </button>
+                </div>
+            {% endif %}
+
+        </div>
+        <input type="textarea" id="json" name="components" disabled autocomplete="off" class=" d-none">
+
     </form>
+
 </div>
 
 <script type="text/javascript">
     var jsonElement = document.getElementById('json');
     var subJSON = document.getElementById('subjson');
     var builder = new Formio.FormBuilder(document.getElementById("builder"), {
-        display: 'form',
-        components: {{ components or [] }},
-    }, {
-        baseUrl: 'http://localhost:9525/mongo_forms'
-    });
+            display: 'form',
+            components: {{ components|safe or [] }},
+        },
+        {
+            baseUrl: '{{ base_form_url  }}'
+        }
+    );
 
     var onForm = function (form) {
         form.on('change', function () {
@@ -106,45 +139,97 @@
                 return v;
         });
     };
+    {% for btn in action_buttons %}
+        {% if  btn['type'] == "DELETE" %}
+            $("#{{ btn['id'] }}").on('click', function (e) {
+                e.preventDefault(); // disable the POST of the form by the submit button
+                // $(this).$("#")
+                let self = this;
 
-    $("#fproject").submit(function (e) {
-        e.preventDefault(); // disable the POST of the form by the submit button
-        // $(this).$("#")
-        let self = this;
-        var datax = $(self).serializeArray();
-        var data = datax.filter(function (dat) {
-            return !dat.name.startsWith("data");
-        });
-        let sck = builder.instance.schema
-        if (sck.hasOwnProperty("display")) {
-            delete sck.display
-        }
-        // jsonElement.value = JSON.stringify(sck);
-        data.push({name: 'components', value: sck['components']});
-        console.log(data);
-        $.ajax({
-            type: "POST",
-            url: "/builder/{{ form_id }}",
-            data: JSON.stringify(data),
-            beforeSend: function () {
-                $("#loader").removeClass("d-none");
-            },
-            error: function (e) {
-                $("#loader").addClass("d-none");
-                alert("Errore Interno conttatare Helpdesk", e);
-            },
-            success: function (result) {
-                if ((result.hasOwnProperty('link')) && result.reload) {
-                    if (result.link === "#") {
-                        window.location.reload();
-                    } else {
-                        window.location.href = result.link;
+                // jsonElement.value = JSON.stringify(sck);
+                console.log("send delete")
+                $.ajax({
+                    type: "{{ btn['type'] }}",
+                    url: "{{ btn['url_action'] }}",
+                    headers: {
+                        'authtoken': '{{ token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    data: "",
+                    beforeSend: function () {
+                        $("#loader").removeClass("d-none");
+                    },
+                    error: function (e) {
+                        $("#loader").addClass("d-none");
+                        alert("Errore Interno conttatare Helpdesk", e);
+                    },
+                    success: function (result) {
+                        console.log(result.hasOwnProperty('link'))
+                        if ((result.hasOwnProperty('link')) && result.reload) {
+                            if (result.link === "#") {
+                                window.location.reload();
+                            } else {
+                                console.log(result);
+                                parent.gotolink(result.link);
+                            }
+                        }
+                        $("#loader").addClass("d-none");
+                    },
+                });
+
+
+            });
+        {% else %}
+            $("#{{ btn['id'] }}").on('click', function (e) {
+                e.preventDefault(); // disable the POST of the form by the submit button
+                // $(this).$("#")
+                let self = this;
+                {#$("#fproject").validate();#}
+                if ($("#fproject").valid()) {
+                    let datax = $("#fproject").serializeArray();
+                    var data = datax.filter(function (dat) {
+                        return !dat.name.startsWith("data");
+                    });
+
+                    let sck = builder.instance.schema
+                    if (sck.hasOwnProperty("display")) {
+                        delete sck.display
                     }
+
+                    // jsonElement.value = JSON.stringify(sck);
+                    data.push({name: 'components', value: sck['components']});
+                    console.log(data)
+                    $.ajax({
+                        type: "{{ btn['type'] }}",
+                        url: "{{ btn['url_action'] }}",
+                        headers: {
+                            'authtoken': '{{ token }}',
+                            'Content-Type': 'application/json'
+                        },
+                        data: JSON.stringify(data),
+                        beforeSend: function () {
+                            $("#loader").removeClass("d-none");
+                        },
+                        error: function (e) {
+                            $("#loader").addClass("d-none");
+                            alert("Errore Interno conttatare Helpdesk", e);
+                        },
+                        success: function (result) {
+                            if ((result.hasOwnProperty('link')) && result.reload) {
+                                if (result.link === "#") {
+                                    window.location.reload();
+                                } else {
+                                    parent.gotolink(result.link);
+                                }
+                            }
+                            $("#loader").addClass("d-none");
+                        },
+                    });
                 }
-                $("#loader").addClass("d-none");
-            },
-        });
-    });
+
+            });
+        {% endif %}
+    {% endfor %}
 
 
 </script>

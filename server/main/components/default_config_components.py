@@ -95,8 +95,8 @@ formio_map = {
     "container": "block_container.html",
     "content": "",
     "currency": "",
-    "datagrid": "table/table.html",
-    "datagridRow": "table/table_row.html",
+    "datagrid": "datagrid/datagrid.html",
+    "datagridRow": "datagrid/datagrid_row.html",
     "datamap": "",
     "datetime": "block_date.html",
     "day": "",
@@ -123,7 +123,8 @@ formio_map = {
     "select": "form_select_search.html",
     "selectboxes": "form_select_multi.html",
     "signature": "",
-    "survey": "",
+    "survey": "survey/survey.html",
+    "surveyRow": "survey/survey_row.html",
     "table": "table.html",
     "tabs": "",
     "tags": "",
@@ -133,6 +134,7 @@ formio_map = {
     "unknown": "UnknownComponent",
     "url": "text_link.html",
     "well": "",
+    "info": "info_readonly_block.html",
 }
 
 form_io_default_map = {

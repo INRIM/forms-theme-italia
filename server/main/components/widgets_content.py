@@ -6,6 +6,7 @@ class PageWidget(WidgetsBase):
     def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False, **kwargs):
         super(PageWidget, self).__init__(templates_engine, request, **kwargs)
         self.base_path = kwargs.get('base_path', "/")
+        self.page_api_action = kwargs.get('page_api_action', "/")
         self.settings = settings
         self.schema = schema
         self.ext_resource = resource_ext
@@ -15,8 +16,7 @@ class PageWidget(WidgetsBase):
     def get_login_act(self, session):
         return 'logout' if session.get('logged_in') else 'login'
 
-    def render_page(self, template_name_or_list: str, session: dict, **context):
-
+    def get_config(self, session: dict, **context):
         today_date = self.dte.get_tooday_ui()
         avatar = "/avatars/"
         if session.get('logged_in'):
@@ -42,10 +42,15 @@ class PageWidget(WidgetsBase):
             "export_button": self.export_btn,
             "rows": self.rows,
             "request": self.request,
-            "base_path": self.base_path
+            "base_path": self.base_path,
+            "page_api_action": self.page_api_action,
 
         }
         kwargs_def = {**context, **base_prj_data}
+        return kwargs_def
+
+    def render_page(self, template_name_or_list: str, session: dict, **context):
+        kwargs_def = self.get_config(session, **context)
         return self.response_template(template_name_or_list, kwargs_def)
 
     def render_custom(self, tmpname, cfg):

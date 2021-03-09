@@ -31,6 +31,7 @@ class Component:
         self.component_items = []
         self.multi_row = False
         self.grid_rows = []
+        self.size = 12
 
     @property
     def key(self):
@@ -84,8 +85,6 @@ class Component:
         for key, value in component.items():
             if key not in cfg_map:
                 cfg[key] = value
-                if key == "width":
-                    cls_size = f" col-lg-{value}"
             else:
                 if isinstance(cfg_map[key], dict):
                     if component.get(key):
@@ -103,14 +102,14 @@ class Component:
                 else:
                     k = cfg_map[key]
                     v = value
-                if k:
-                    if k == 'label':
-                        v = self.i18n.get(v, v)
-                    if k == "customClass" and v == "":
-                        v = cls_size
-                    cfg[k] = v
+                    if k:
+                        if k == 'label':
+                            v = self.i18n.get(v, v)
+                        if k == "customClass" and v == "":
+                            v = cls_size
+                        cfg[k] = v
         if "customClass" not in cfg:
-            cfg['customClass'] = cls_size
+            cfg['customClass'] = f" col-lg-{self.size} "
         cfg['disabled'] = disabled
         cfg['items'] = self.component_items
         cfg['id_form'] = id_form
@@ -133,7 +132,8 @@ class Component:
         print("-------------------------")
 
     def render(self, id_form, id_submission, size="12", log=False):
-        cfg = self.make_config_new(self.raw, id_form, id_submission, disabled=self.builder.disabled, cls_size=f"col-lg-{size}")
+        cfg = self.make_config_new(self.raw, id_form, id_submission, disabled=self.builder.disabled,
+                                   cls_size=f"col-lg-{size}")
         if log:
             self.log_render(cfg, size)
         if self.key == "submit":
@@ -172,6 +172,15 @@ class passwordComponent(Component):
 
 class checkboxComponent(Component):
     pass
+
+
+class infoComponent(Component):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+        cfg = super(infoComponent, self).make_config_new(
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
+        )
+        cfg['customClass'] = f" col-lg-{self.size} "
+        return cfg
 
 
 class selectboxesComponent(Component):
@@ -331,8 +340,101 @@ class currencyComponent(Component):
     pass
 
 
+class surveyRowComponent(Component):
+    def __init__(self, raw, builder, **kwargs):
+        super().__init__(raw, builder, **kwargs)
+        self.headers = []
+        self.grid = None
+        self.min_row = 1
+        self.max_row = 1
+        self.row_id = 0
+        self.size = 12
+
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+        cfg = super(surveyRowComponent, self).make_config_new(
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
+        )
+        cfg['row_id'] = self.row_id
+        cfg['customClass'] = f" col-lg-{self.size} "
+        return cfg
+
+
 class surveyComponent(Component):
-    pass
+
+    def __init__(self, raw, builder, **kwargs):
+        super().__init__(raw, builder, **kwargs)
+        self.headers = []
+        self.multi_row = False
+        self.row_id = 0
+        self.eval_rows()
+
+    def eval_rows(self):
+        self.component_items = []
+        for row_id in range(len(self.raw['questions'])):
+            row = self.get_row(row_id)
+            self.component_items.append(row)
+
+    @property
+    def rows(self):
+        return self.component_items
+
+    def get_row(self, row_id):
+        value = ""
+
+        raw_row = OrderedDict()
+        raw_row["key"] = f"{self.key}_surveyRow_{row_id}"
+        raw_row["type"] = "surveyRow"
+        row = self.builder.get_component_object(raw_row)
+        row.row_id = row_id
+        row.size = 12
+        group = self.raw['questions'][row_id]['value']
+
+        raw_info = OrderedDict()
+        raw_info['key'] = f"{group}_{row_id}-info"
+        raw_info["type"] = "info"
+        raw_info["label"] = self.raw['questions'][row_id]['label']
+        # raw_info["value"] = self.raw['questions'][row_id]['value']
+        info = self.builder.get_component_object(raw_info)
+        info.size = 12 - len(self.raw['values'])
+        row.component_items.append(info)
+
+        if self.value:
+            value = self.value.get(group, "")
+
+        raw_radio = OrderedDict()
+        raw_radio['key'] = f"{self.key}_{group}"
+        raw_radio["type"] = "radio"
+        raw_radio["label"] = ""
+        raw_radio["values"] = self.raw['values']
+        raw_radio["value"] = value
+        raw_radio["inline"] = True
+        radio = self.builder.get_component_object(raw_radio)
+        radio.size = len(self.raw['values'])
+        row.component_items.append(radio)
+
+        return row
+
+    def compute_data(self, data):
+        data = super(surveyComponent, self).compute_data(data)
+        key = self.key
+        list_to_pop = []
+        new_dict = {
+            key:{}
+        }
+        last_group = False
+        data_row = {}
+        for k, v in data.items():
+            if f"{key}_" in k:
+                list_to_pop.append(k)
+                groups = k.split("_")
+                new_dict[key][groups[1]] = v
+        for i in list_to_pop:
+            data.pop(i)
+        data = {**data, **new_dict}
+        logger.info("Survey data")
+        logger.info(data)
+
+        return data.copy()
 
 
 class signatureComponent(Component):
@@ -354,8 +456,9 @@ class columnsComponent(Component):
 
 
 class columnComponent(Component):
-    pass
-
+    def __init__(self, raw, builder, **kwargs):
+        super().__init__(raw, builder, **kwargs)
+        self.size = self.raw['width']
 
 class fieldsetComponent(Component):
     pass
