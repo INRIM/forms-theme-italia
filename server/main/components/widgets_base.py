@@ -5,7 +5,7 @@ from starlette.templating import Jinja2Templates
 import copy
 
 from .DateEngine import DateEngine
-from . import default_config_components
+from . import base_config_components
 
 
 class WidgetsBase:
@@ -97,7 +97,7 @@ class WidgetsBase:
         to_update = {}
         self.list_ajax_reponse = []
         dat_update = getattr(
-            default_config_components, f"get_update_alert_{resp_type}")(selector, resp_message)
+            base_config_components, f"get_update_alert_{resp_type}")(selector, resp_message)
         to_update["value"] = self.render_template(
             f"{self.components_base_path}alert_message.html", dat_update['value'])
         to_update["selector"] = dat_update['selector']

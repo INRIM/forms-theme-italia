@@ -2,7 +2,7 @@ import collections
 
 from json2html import *
 import pandas as pd
-from .default_config_components import *
+from .base_config_components import *
 from . import custom_components
 import logging
 

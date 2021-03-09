@@ -4,7 +4,7 @@ from copy import deepcopy
 from formiodata.builder import Builder
 from formiodata.form import Form
 
-from .default_config_components import *
+from .base_config_components import *
 from . import custom_components
 import logging
 

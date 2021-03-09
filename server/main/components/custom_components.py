@@ -5,7 +5,7 @@ import json
 from collections import OrderedDict
 
 from formiodata.utils import base64_encode_url, decode_resource_template, fetch_dict_get_value
-from .default_config_components import *
+from .base_config_components import *
 import copy
 
 
