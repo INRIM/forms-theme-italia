@@ -29,6 +29,9 @@ class Component:
         self.tmpe = builder.tmpe
         self.components_base_path = builder.components_base_path
         self.component_items = []
+        self.default_data = {
+            self.key: ""
+        }
         self.multi_row = False
         self.grid_rows = []
         self.size = 12
@@ -366,6 +369,9 @@ class surveyComponent(Component):
         self.headers = []
         self.multi_row = False
         self.row_id = 0
+        self.default_data = {
+            self.key: {}
+        }
         self.eval_rows()
 
     def eval_rows(self):
@@ -418,11 +424,7 @@ class surveyComponent(Component):
         data = super(surveyComponent, self).compute_data(data)
         key = self.key
         list_to_pop = []
-        new_dict = {
-            key:{}
-        }
-        last_group = False
-        data_row = {}
+        new_dict = self.default_data.copy()
         for k, v in data.items():
             if f"{key}_" in k:
                 list_to_pop.append(k)
@@ -431,9 +433,6 @@ class surveyComponent(Component):
         for i in list_to_pop:
             data.pop(i)
         data = {**data, **new_dict}
-        logger.info("Survey data")
-        logger.info(data)
-
         return data.copy()
 
 
@@ -459,6 +458,7 @@ class columnComponent(Component):
     def __init__(self, raw, builder, **kwargs):
         super().__init__(raw, builder, **kwargs)
         self.size = self.raw['width']
+
 
 class fieldsetComponent(Component):
     pass
@@ -516,6 +516,9 @@ class datagridComponent(Component):
         self.max_row = 1
         self.add_enabled = True
         self.row_id = 0
+        self.default_data = {
+            self.key: []
+        }
         self.aval_validate_row()
 
     def aval_validate_row(self):
@@ -587,9 +590,7 @@ class datagridComponent(Component):
             c_keys.append(component.key)
         key = self.key
         list_to_pop = []
-        new_dict = {
-            key: []
-        }
+        new_dict = self.default_data.copy()
         last_group = False
         data_row = {}
         for k, v in data.items():

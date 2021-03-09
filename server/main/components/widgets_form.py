@@ -222,17 +222,3 @@ class FormIoWidget(PageWidget):
             results['row'] = row
             return results
 
-    def survey_rows(self, key, render=False, log=False):
-        results = {
-            "rows": [],
-            "showAdd": False
-        }
-        component = self.get_component_by_key(key)
-        component.eval_rows()
-        rows = component.rows
-        for row in rows:
-            if render:
-                results['rows'].append(row.render(self.name, self.submission_id, log=log))
-            else:
-                results['rows'].append(row)
-        return results
