@@ -183,7 +183,7 @@ class FormIoWidget(PageWidget):
 
     def make_form(self, data):
         self.load_data(data)
-        self.print_structure()
+        # self.print_structure()
         self.title = self.schema['title']
         self.name = self.schema['name']
         self.form_id = self.schema['id']

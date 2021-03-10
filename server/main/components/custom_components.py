@@ -128,9 +128,9 @@ class numberComponent(CustomComponent):
 
 
 class infoComponent(CustomComponent):
-    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(infoComponent, self).make_config_new(
-            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['customClass'] = f" col-lg-{self.size} "
         return cfg
@@ -296,7 +296,7 @@ class datetimeComponent(CustomComponent):
         self.max = self.raw['widget']['maxDate']
         self.client_format = self.builder.settings.ui_date_mask
         self.value_date = ""
-        self.value_time = ""
+        self.value_time = "00:00"
         self.value_datetime = ""
         self.dte = DateEngine(
             UI_DATETIME_MASK=self.builder.settings.ui_datetime_mask,
@@ -324,9 +324,9 @@ class datetimeComponent(CustomComponent):
         elif self.is_time and vals:
             self.value_time = f"{vals}"
 
-    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(datetimeComponent, self).make_config_new(
-            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['value_date'] = self.value_date
         cfg['value_time'] = self.value_time
@@ -384,9 +384,9 @@ class surveyRowComponent(CustomComponent):
         self.row_id = 0
         self.size = 12
 
-    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(surveyRowComponent, self).make_config_new(
-            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['row_id'] = self.row_id
         cfg['customClass'] = f" col-lg-{self.size} "
@@ -529,9 +529,9 @@ class datagridRowComponent(CustomComponent):
         self.max_row = 1
         self.row_id = 0
 
-    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(datagridRowComponent, self).make_config_new(
-            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['row_id'] = self.row_id
         return cfg
@@ -559,9 +559,9 @@ class datagridComponent(CustomComponent):
             if self.raw.get("validate").get("maxLength"):
                 self.max_row = int(self.raw.get("validate").get("maxLength"))
 
-    def make_config_new(self, CustomComponent, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
+    def make_config_new(self, component, id_form, id_submission, disabled=False, cls_size=" col-lg-12 "):
         cfg = super(datagridComponent, self).make_config_new(
-            CustomComponent, id_form, id_submission, disabled=disabled, cls_size=cls_size
+            component, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
         cfg['min_rows'] = self.min_row
         cfg['max_rows'] = self.max_row
@@ -582,8 +582,6 @@ class datagridComponent(CustomComponent):
     @property
     def rows(self):
         rows = []
-        # Sanity check is really needed.
-        # TODO add test for empty datagrid value.
         numrow = self.min_row
         if self.value:
             numrow = len(self.value)
@@ -598,16 +596,15 @@ class datagridComponent(CustomComponent):
         raw_row["type"] = "datagridRow"
         row = self.builder.get_component_object(raw_row)
         row.row_id = row_id
-        for CustomComponent in self.component_items:
+        for component in self.component_items:
             # Copy CustomComponent raw (dict), to ensure no binding and overwrite.
-            component_raw = CustomComponent.raw.copy()
+            component_raw = component.raw.copy()
             component_raw['key'] = f"{self.key}_dataGridRow_{row_id}-{component_raw.get('key')}"
             component_obj = self.builder.get_component_object(component_raw)
             if self.value:
-                for row_dict in self.value:
-                    for key, val in row_dict.items():
-                        if key == component_obj.key:
-                            component_obj.value = val
+                for key, val in self.value[row_id].items():
+                    if key.split("-")[1] == component.key:
+                        component_obj.value = val
             row.component_items.append(component_obj)
         return row
 
@@ -617,8 +614,8 @@ class datagridComponent(CustomComponent):
     def compute_data(self, data):
         data = super(datagridComponent, self).compute_data(data)
         c_keys = []
-        for CustomComponent in self.component_items:
-            c_keys.append(CustomComponent.key)
+        for component in self.component_items:
+            c_keys.append(component.key)
         key = self.key
         list_to_pop = []
         new_dict = self.default_data.copy()
