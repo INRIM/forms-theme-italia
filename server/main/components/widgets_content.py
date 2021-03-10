@@ -44,6 +44,7 @@ class PageWidget(WidgetsBase):
             "request": self.request,
             "base_path": self.base_path,
             "page_api_action": self.page_api_action,
+            "logo_img_url": self.settings.logo_img_url
 
         }
         kwargs_def = {**context, **base_prj_data}
