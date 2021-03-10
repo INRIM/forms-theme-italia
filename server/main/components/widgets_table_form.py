@@ -8,7 +8,7 @@ from .base_config_components import *
 from . import custom_components
 import logging
 
-from .widgets_form import CustomBuilder
+from .widgets_form import CustomBuilder, CustomForm
 from .widgets_table import TableWidget
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,8 @@ class TableFormWidget(TableWidget):
 
     def make_def_table(self, data, **kwargs):
         logger.info("make_def_table")
-        self.form_c = Form({}, self.builder)
-        self.print_structure()
+        self.form_c = CustomForm({}, self.builder)
+        # self.print_structure()
         self.title = self.form_schema['title']
         self.name = self.form_schema['id']
         return self.render_def_table(data, **kwargs)
@@ -58,4 +58,5 @@ class TableFormWidget(TableWidget):
         for component in self.builder.main.component_items:
             if component.raw.get('tableView'):
                 cols[component.key] = component.label
+        print(cols)
         return collections.OrderedDict(cols.copy())

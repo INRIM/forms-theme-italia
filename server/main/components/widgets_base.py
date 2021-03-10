@@ -102,7 +102,7 @@ class WidgetsBase:
             f"{self.components_base_path}alert_message.html", dat_update['value'])
         to_update["selector"] = dat_update['selector']
         list_res.append(to_update)
-        print("Response Ajax", list_res)
+        # print("Response Ajax", list_res)
         return list_res
 
     def response_template(self, name: str, context: dict):

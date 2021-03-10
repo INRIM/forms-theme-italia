@@ -42,10 +42,10 @@ class TableWidget(PageWidget):
         return res
 
     def get_df(self, **values):
-        print(".....................")
-
-        print(values['data_list'])
-        print("---------------------")
+        # print(".....................")
+        #
+        # print(values['data_list'])
+        # print("---------------------")
 
         df = pd.DataFrame(values['data_list'])
         df = df.rename_axis(None)
@@ -58,7 +58,7 @@ class TableWidget(PageWidget):
                 df[item] = [self.convert_link(f"{self.components_base_path}item_link.html", l) for l in df[item]]
             for item in values.get('strings') or []:
                 df[item] = [self.convert_str_server_ui(d) for d in df[item]]
-            print("df[values['columns'].keys()]", values['columns'].keys())
+            # print("df[values['columns'].keys()]", values['columns'].keys())
             dfc = df[values['columns'].keys()]
             df = dfc.rename(columns=dict(values['columns']))
         return df
