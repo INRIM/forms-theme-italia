@@ -533,6 +533,7 @@ class datagridRowComponent(CustomComponent):
         cfg = super(datagridRowComponent, self).make_config_new(
             component, id_form, id_submission, disabled=disabled, cls_size=cls_size
         )
+        cfg['parent_key'] = self.parent.key
         cfg['row_id'] = self.row_id
         return cfg
 
@@ -596,6 +597,7 @@ class datagridComponent(CustomComponent):
         raw_row["type"] = "datagridRow"
         row = self.builder.get_component_object(raw_row)
         row.row_id = row_id
+        row.parent = self
         for component in self.component_items:
             # Copy CustomComponent raw (dict), to ensure no binding and overwrite.
             component_raw = component.raw.copy()

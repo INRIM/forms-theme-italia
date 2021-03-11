@@ -3,8 +3,8 @@
     {% for component in items %}
         <td class="">{{ component.render(form_id, id_submission, log=False)|safe }}</td>
     {% endfor %}
-    <td class="remove_row d-none" data-row_id="{{ key }}">
-        <button type="button" class="btn btn-danger btn-xs btn-icon" onclick="removeRow({{ key }})">
+    <td class="{{ parent_key }} remove_row  d-none" data-row_id="{{ key }}">
+        <button type="button" class="btn btn-danger btn-xs btn-icon" onclick="{{ parent_key }}_removeRow({{ key }})">
                 <span class="rounded-icon rounded-danger">
                     <svg class="icon icon-white"><use
                             xlink:href="/static/svg/sprite.svg#it-close-circle"></use></svg>

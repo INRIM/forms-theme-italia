@@ -8,7 +8,7 @@
 
     </tbody>
     <tfoot id="{{ key }}_foot" class="">
-    <tr id="{{ key }}_AddRow">
+    <tr id="{{ key }}_{{ key }}_addRow">
         <td colspan="5">
             <button type="button" class="btn btn-primary btn-xs btn-icon"
                     id="{{ key }}_btn_add"
@@ -27,15 +27,15 @@
 <script type="text/javascript" nonce="{{ nonce or '2726c7f26c' }}">
 
 
-    function addRow(row) {
+    function {{ key }}_addRow(row) {
         var table = $("#{{ key }}_body");
         table.append(row);
     };
 
-    function addRows(rows) {
+    function {{ key }}_addRows(rows) {
 
         for (let item in rows) {
-            addRow(rows[item]);
+            {{ key }}_addRow(rows[item]);
         }
         $("#{{ key }}_body").append($("#{{ key }}_foot"));
         $(":input").each(function () {
@@ -46,18 +46,18 @@
         {#$('form').find('*').filter(':input:visible:first').select();#}
     };
 
-    function addNewRow(row) {
-        addRow(row);
+    function {{ key }}_addNewRow(row) {
+        {{ key }}_addRow(row);
         $("#{{ key }}_body").append($("#{{ key }}_foot"))
     };
 
-    function updateActions(num) {
+    function {{ key }}_updateActions(num) {
         let actions = $("#{{  key  }}_body").data('actions');
         let newactions = actions + num;
         $("#{{  key  }}_body").data('actions', newactions);
     }
 
-    function updateTableNumRow(numRows) {
+    function {{ key }}_updateTableNumRow(numRows) {
 
         $("#{{  key  }}_body").data('numrows', numRows);
         $("#{{  key  }}_numrows").text("Righe: " + numRows);
@@ -65,14 +65,14 @@
 
     };
 
-    function showRemove() {
-        $(".remove_row").each(function () {
+    function {{ key }}_showRemove() {
+        $(".{{ key }}.remove_row").each(function () {
             $(this).removeClass("d-none");
         });
     }
 
-    function hideRemove() {
-        $(".remove_row").each(function () {
+    function {{ key }}_hideRemove() {
+        $(".{{ key }}.remove_row").each(function () {
             $(this).addClass("d-none");
         });
     }
@@ -91,15 +91,15 @@
         },
         success: function (result) {
             let maxrows = $("#{{  key  }}_body").data('maxrows');
-            addRows(result.rows);
+            {{ key }}_addRows(result.rows);
             $(this).data("data_numrows", result.numrows);
             if (result.rows.length < maxrows) {
 
                 $("#{{ key }}_foot").removeClass("d-none");
 
             }
-            updateTableNumRow(result.rows.length);
-            updateActions(result.rows.length);
+            {{ key }}_updateTableNumRow(result.rows.length);
+            {{ key }}_updateActions(result.rows.length);
             $("#loader").addClass("d-none");
         },
     });
@@ -114,7 +114,7 @@
             url: "/client/grid/{{ key }}/{{ id_form }}/" + actions + "/newrow",
             data: {},
             beforeSend: function () {
-                hideRemove();
+                {{ key }}_hideRemove();
                 $("#{{ key }}_foot").addClass("d-none");
                 $("#loader").removeClass("d-none");
             },
@@ -124,30 +124,30 @@
             },
             success: function (result) {
                 if (numrows < maxrows) {
-                    addNewRow(result.row);
+                    {{ key }}_addNewRow(result.row);
                     let newnumrows = numrows + 1;
-                    updateTableNumRow(newnumrows);
-                    updateActions(1);
+                    {{ key }}_updateTableNumRow(newnumrows);
+                    {{ key }}_updateActions(1);
                     $("#{{ key }}_foot").removeClass("d-none");
                 }
-                showRemove();
+                {{ key }}_showRemove();
                 $("#loader").addClass("d-none");
             },
         });
     });
 
-    function removeRow(rowid) {
-        hideRemove()
+    function {{ key }}_removeRow(rowid) {
+        {{ key }}_hideRemove()
         let numrows = $("#{{  key  }}_body").data('numrows');
         let minrows = $("#{{  key  }}_body").data('minrows');
         let maxrows = $("#{{  key  }}_body").data('maxrows');
         let newrows = numrows - 1;
         if (numrows > minrows) {
             $(rowid).remove();
-            updateTableNumRow(newrows);
+            {{ key }}_updateTableNumRow(newrows);
         }
         if (newrows > minrows) {
-            showRemove();
+            {{ key }}_showRemove();
         }
         if (newrows < maxrows) {
             $("#{{ key }}_foot").removeClass("d-none");
