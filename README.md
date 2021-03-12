@@ -1,6 +1,6 @@
-# Form Theme Italia
+# Form Templates Italia Theme
 
-This reposotory is a dependency of [Inrim Forms Demo](https://github.com/inrim/inrim-forms-demo/) 
+This reposotory is a dependency of [Inrim Forms Demo](https://github.com/INRIM/inrim-forms-demo/) 
 
 The project is in WIP and contains code and templates to display Formio form components with 
 italian [AGID Theme](https://github.com/italia/bootstrap-italia/) 
@@ -64,4 +64,4 @@ well  | TODO|
 
 ## License
 
-This project is covered by a [licenza MIT](https://github.com/INRIM/api-ugov-persona-fisica/blob/master/LICENSE).
+This project is covered by a [license MIT](https://github.com/INRIM/forms-theme-italia/blob/master/LICENSE).
