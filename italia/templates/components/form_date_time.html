@@ -6,9 +6,9 @@
 </style>
 <div class="row">
     {% if is_date %}
-        <div class="{{ fgroupgp or 'form-group' }} " id="{{ key }}">
-            <div class="it-datepicker-wrapper  " id="{{ key }}_date">
 
+        <div class="it-datepicker-wrapper  " id="{{ key }}_date">
+            <div class="{{ fgroupgp or 'form-group' }} " id="{{ key }}">
                 <input class="form-control it-date-datepicker"
                        id="{{ key }}-date_in" name="{{ key }}-date_in" value="{{ value_date }}"
                        type="text"
@@ -24,8 +24,9 @@
         </div>
     {% endif %}
     {% if is_time %}
-        <div class="{{ fgroupgp or 'form-group' }} ">
-            <div class="it-timepicker-wrapper" id="{{ key }}_time">
+
+        <div class="it-timepicker-wrapper" id="{{ key }}_time">
+            <div class="{{ fgroupgp or 'form-group' }} ">
                 <section class="time-spinner">
                     <span class="sr-only">Ora {{ label }}</span>
                     <div>
