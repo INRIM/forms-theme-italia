@@ -11,6 +11,7 @@ class PageWidget(WidgetsBase):
         self.schema = schema
         self.ext_resource = resource_ext
         self.beforerows = []
+        self.afterrrows = []
         self.disabled = disabled
 
     def get_login_act(self, session):
@@ -37,6 +38,7 @@ class PageWidget(WidgetsBase):
             'avatar': avatar,
             'today_date': today_date,
             "beforerows": self.beforerows,
+            "afterrrows": self.afterrrows,
             "backtop": self.backtop,
             "error": self.error,
             "export_button": self.export_btn,

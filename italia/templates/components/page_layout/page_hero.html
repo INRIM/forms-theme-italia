@@ -18,6 +18,11 @@
                     {{ item|safe }}
                 {% endfor %}
             </div>
+            {% if afterrrows %}
+                {% for item in afterrrows %}
+                    {{ item|safe }}
+                {% endfor %}
+            {% endif %}
         </div>
 
     </div>

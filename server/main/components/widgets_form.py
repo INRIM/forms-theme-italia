@@ -20,6 +20,8 @@ class CustomBuilder(Builder):
         self.components_base_path = kwargs.get('components_base_path', False)
         self.settings = kwargs.get('settings', False)
         super(CustomBuilder, self).__init__(schema_json, **kwargs)
+        self.table_colums = []
+        self.table_colums_types = []
 
     def load_components(self):
         self._raw_components = self.schema.get('components')
@@ -37,7 +39,6 @@ class CustomBuilder(Builder):
                 if is_columns:
                     component['type'] = 'column'
                 component_obj = self.get_component_object(component)
-                # component_obj.load(None, None)
                 if parent:
                     component_obj.parent = parent
 

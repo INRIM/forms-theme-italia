@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class TableWidget(PageWidget):
 
-    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False,**kwargs):
+    def __init__(self, templates_engine, request, settings, schema={}, resource_ext=None, disabled=False, **kwargs):
         super(TableWidget, self).__init__(
             templates_engine, request, settings, schema=schema, resource_ext=resource_ext,
             disabled=disabled, **kwargs
@@ -25,6 +25,18 @@ class TableWidget(PageWidget):
         self.form_name = ""
         self.name = "table_default"
         self.title = ""
+        self.page = 0
+        self.idkey = "id"
+        self.data_config = {}
+        self.pagination = False
+        self.columns_search = True
+        self.tab_responsive = False
+        self.page_menu = True
+        self.full_width = True
+        self.click_row = {}
+        self.columnDefs = []
+        self.pageLength = -1
+        self.dom_cfg = "itpr"
         self.components_base_path = f"/{self.theme}/templates/components/table/"
 
     def get_table(self, values):
@@ -77,33 +89,42 @@ class TableWidget(PageWidget):
         logger.info(keys)
         return collections.OrderedDict(cols)
 
+    def prepare_table_data_config(self, data_list, **kwargs):
+        columns = self.get_columns(data_list).copy()
+        self.data_config = {
+            'data_list': data_list[:],
+            "tab_id": self.name,
+            "cls": "table table-borderless table-hover p-2",
+            "columns": columns
+        }
+
+    def prepare_table_function_config(self, data_list, **kwargs):
+        columns = self.get_columns(data_list).copy()
+        self.data_config = {
+            'data_list': data_list[:],
+            "tab_id": self.name,
+            "cls": "table table-borderless table-hover p-2",
+            "columns": columns
+        }
+
+
     def render_def_table(self, data_list, **kwargs):
         template = f"{self.components_base_path}base_datatable.html"
-        columns = self.get_columns(data_list)
-        if "_id" in self.schema:
-            idkey = '_id'
-        else:
-            idkey = 'id'
         click_url_base = kwargs.get("click_url", "/")
         table_view = {
             "title": self.title,
             'tab_id': self.name,
-            'table': self.get_table({
-                'data_list': data_list,
-                "tab_id": self.name,
-                "cls": "table table-borderless table-hover p-2",
-                "columns": columns
-            }),
+            'table': self.get_table(self.data_config),
             'columns_search': True,
             'page_menu': True,
             'tab_responsive': False,
             "full_width": True,
             "click_row": {
-                "col": 0,
+                "col": list(self.data_config['columns'].keys()).index(self.idkey),
                 "url": click_url_base,
             },
             "columnDefs": {
-                "targets": [list(columns.keys()).index(idkey)],
+                "targets": [list(self.data_config['columns'].keys()).index(self.idkey)],
                 "visible": False,
             },
             'pageLength': len(data_list),

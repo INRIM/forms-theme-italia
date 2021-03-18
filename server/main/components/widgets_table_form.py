@@ -28,6 +28,7 @@ class TableFormWidget(TableWidget):
             template_engine=templates_engine, components_base_path=self.components_base_path,
             disabled=self.disabled, settings=settings
         )
+
     def print_structure(self):
         for node in self.builder.main.component_items:
             print(node, node.key, node.raw.get("tableView"))
@@ -60,3 +61,12 @@ class TableFormWidget(TableWidget):
                 cols[component.key] = component.label
         print(cols)
         return collections.OrderedDict(cols.copy())
+
+    def prepare_table_config(self, data_list, **kwargs):
+        columns = self.get_columns(data_list)
+        self.data_config = {
+            'data_list': data_list,
+            "tab_id": self.name,
+            "cls": "table table-borderless table-hover p-2",
+            "columns": columns
+        }
