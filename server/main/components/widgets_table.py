@@ -109,6 +109,7 @@ class TableWidget(PageWidget):
 
 
     def render_def_table(self, data_list, **kwargs):
+        self.prepare_table_function_config(data_list, **kwargs)
         template = f"{self.components_base_path}base_datatable.html"
         click_url_base = kwargs.get("click_url", "/")
         table_view = {
