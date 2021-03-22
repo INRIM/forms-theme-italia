@@ -1,4 +1,4 @@
-<a href="{{ link }}" class="text-decoration-none  {{ customClass }}"
+<a href="{{ link }}" class="text-decoration-none {% if hidden %} d-none {% endif %}  {{ customClass }}"
         {% if target %} target="{{ target }}" {% endif %}
 >
     {% if direction and direction=='left' %}

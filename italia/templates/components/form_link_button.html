@@ -1,5 +1,5 @@
 <!--# 2020 Alessio Gerace @ Inrim-->
-<div class="{{ fgroupgp or 'form-group'}}  {{customClass or 'text-center'}}" id="{{ key }}">
+<div class="{{ fgroupgp or 'form-group'}} {% if hidden %} d-none {% endif %}  {{customClass or 'text-center'}}" id="{{ key }}">
     <a href="{{link}}" id="{{ key }}_btn" class="btn {{ btn_class or 'btn-primary' }}  btn active" role="button"
        aria-pressed="false" target="{{ target or '_blank'}}"
        {% if disabled %} aria-disabled="true" {% endif %}

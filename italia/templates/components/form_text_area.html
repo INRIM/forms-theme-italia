@@ -1,4 +1,4 @@
-<div class="form-group {{ customClass }}" id="{{ key }}">
+<div class="form-group {% if hidden %} d-none {% endif %} {{ customClass }}" id="{{ key }}">
     {% if html %}
         <div id="{{ key }}_in"
                 {% if is_readonly %}

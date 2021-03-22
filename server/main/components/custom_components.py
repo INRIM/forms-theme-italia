@@ -10,6 +10,7 @@ from formiodata.utils import base64_encode_url, decode_resource_template, fetch_
 from .DateEngine import DateEngine
 from .base_config_components import *
 import copy
+import requests
 
 import uuid
 
@@ -106,6 +107,17 @@ class CustomComponent(Component):
             f"{self.components_base_path}{formio_map[self.raw.get('type')]}", cfg)
         return self.html_component
 
+    def get_remote_data(self, header_key, header_value, url):
+        headers = {
+            "Content-Type": "application/json",
+            header_key: header_value
+        }
+        res = requests.request("get", url, headers=headers)
+        print("get_remote_data")
+        print("responde", res)
+        print("responde", res.json())
+        return res.json()
+
     def compute_data(self, data):
         return data.copy()
 
@@ -168,12 +180,18 @@ class selectComponent(CustomComponent):
         super().__init__(raw, builder, **kwargs)
         self.item_data = {}
         self.template_label_keys = []
-        if self.raw.get('template'):
-            self.template_label_keys = decode_resource_template(self.raw.get('template'))
-        self.compute_resources()
+        self.dataSrc = self.raw.get('dataSrc')
+        if self.dataSrc and self.dataSrc == "resource":
+            if self.raw.get('template'):
+                self.template_label_keys = decode_resource_template(self.raw.get('template'))
+            self.compute_resources()
+        if self.dataSrc and self.dataSrc == "url":
+            self.compute_url()
 
     def compute_resources(self):
-        resource_id = self.raw.get('resource')
+        resource_id = ""
+        if self.raw.get('data') and self.raw.get('data').get("resource"):
+            resource_id = self.raw.get('data') and self.raw.get('data').get("resource")
         if resource_id and not resource_id == "":
             if not self.resources and self.resources_ext:
                 resource_list = self.resources_ext(resource_id)
@@ -181,17 +199,36 @@ class selectComponent(CustomComponent):
                 resource_list = self.resources[resource_id]
             if resource_list:
                 self.raw['data'] = {"values": []}
+                print("~~~~~~~~~~~~`")
+                print(resource_list)
                 for item in resource_list:
                     label = fetch_dict_get_value(item, self.template_label_keys[:])
                     self.raw['data']['values'].append({
                         "label": label,
-                        "value": item['_id']
+                        "value": item['id']
                     })
+
+    def compute_url(self):
+        print("~~~~~DDDDDDDD~~~~~~~`")
+        print(self.raw.get('data'))
+        print("compute_url")
+        url = self.raw.get('data').get("url")
+        header_key = self.raw.get('data', {}).get("headers", {})[0].get('key')
+        header_value = self.raw.get('data', {}).get("headers", [])[0].get('value')
+        resource_list = self.get_remote_data(header_key, header_value, url)
+        if isinstance(resource_list, dict) and "result" in resource_list:
+            resource_list = resource_list['result'][:]
+        if resource_list:
+            for item in resource_list:
+                self.raw['data']['values'].append({
+                    "label": item['name'],
+                    "value": item['id']
+                })
 
     @CustomComponent.value.setter
     def value(self, value):
         if self.template_label_keys and isinstance(value, dict):
-            self.form['value'] = value.get('_id', value)
+            self.form['value'] = value.get('id', value)
         else:
             self.form['value'] = value
 
@@ -681,7 +718,9 @@ class resourceComponent(CustomComponent):
         self.compute_resources()
 
     def compute_resources(self):
-        resource_id = self.raw.get('resource')
+        resource_id = ""
+        if self.raw.get('data') and self.raw.get('data').get("resource"):
+            resource_id = self.raw.get('data') and self.raw.get('data').get("resource")
         if resource_id and not resource_id == "":
             if not self.resources and self.resources_ext:
                 resource_list = self.resources_ext(resource_id)
@@ -693,13 +732,13 @@ class resourceComponent(CustomComponent):
                     label = fetch_dict_get_value(item, self.template_label_keys[:])
                     self.raw['data']['values'].append({
                         "label": label,
-                        "value": item['_id']
+                        "value": item['id']
                     })
 
     @CustomComponent.value.setter
     def value(self, value):
         if self.template_label_keys and isinstance(value, dict):
-            self.form['value'] = value.get('_id', value)
+            self.form['value'] = value.get('id', value)
         else:
             self.form['value'] = value
 

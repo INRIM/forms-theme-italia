@@ -1,4 +1,4 @@
-<div class="form-group bootstrap-select-wrapper {{customClass}}" id="{{ key }}"  >
+<div class="form-group bootstrap-select-wrapper {% if hidden %} d-none {% endif %} {{customClass}}" id="{{ key }}"  >
     <label>{{label}}</label>
     <select title="{{placeholder or 'scegli un opzione'}}" data-live-search="true" data-boundary="window"
             id="{{ key }}_sel"

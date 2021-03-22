@@ -1,7 +1,7 @@
 {% if dividertop %}
     <div class="border-top {{ dividertop }}"></div>
 {% endif %}
-<div class="form-row {{ customClass }}">
+<div class="form-row {% if hidden %} d-none {% endif %} {{ customClass }}">
     {% for component in items %}
         {{ component.render(id_form,id_submission)|safe }}
     {% endfor %}

@@ -1,4 +1,4 @@
-<div class="coords  {{ customClass }}" id="{{ key }}" name="{{ key }}">
+<div class="coords {% if hidden %} d-none {% endif %} {{ customClass }}" id="{{ key }}" name="{{ key }}">
     <label class="font-weight-bold">{{label}}</label>
     {% if html %}
     <div class="">

@@ -90,12 +90,70 @@
 <script type="text/javascript">
     var jsonElement = document.getElementById('json');
     var subJSON = document.getElementById('subjson');
+    var baseurl = window.location.origin + "/client/data";
+    console.log(baseurl);
     var builder = new Formio.FormBuilder(document.getElementById("builder"), {
             display: 'form',
             components: {{ components|safe or [] }},
         },
         {
-            baseUrl: '{{ base_form_url  }}'
+            baseUrl: baseurl,
+            builder: {
+                basic: {
+                    components: {
+                        selectboxes: false,
+                    }
+                },
+                advanced: {
+                    components: {
+                        tags: false,
+                        url: false,
+                        address: false,
+                        day: false,
+                        time: false,
+                        currency: false,
+                        signature: false
+                    }
+
+                },
+                layout: {
+                    components: {
+                        table: false,
+                        tabs: false,
+                        well: false,
+                        fieldset: false
+                    }
+                },
+                data: {
+                    components: {
+                        hidden: false,
+                        datamap: false,
+                        editgrid: false,
+                        tree: false,
+                        container: false,
+                    }
+                },
+                premium: false,
+                custom: {
+                    title: 'Inrim Fields',
+                    weight: 10,
+                    components: {
+                        uid: {
+                            title: 'Inrim id',
+                            key: 'inrim_uid',
+                            icon: 'user-secret',
+                            schema: {
+                                label: 'User uid',
+                                type: 'textfield',
+                                key: 'uid',
+                                input: true,
+                                hidden: true,
+                                tableView: false,
+                            }
+                        },
+                    }
+                }
+            }
         }
     );
 

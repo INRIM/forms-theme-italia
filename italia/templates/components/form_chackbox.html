@@ -1,4 +1,4 @@
-<div class="form-group {{customClass or ''}}" id="{{ key }}">
+<div class="form-group  {% if hidden %} d-none {% endif %} {{customClass or ''}}" id="{{ key }}">
     <div class="form-check {{customClass_check}}">
         <input name="{{ key }}_ck" id="{{ key }}_ck" type="checkbox"
                {% if required %} required {% endif %}

@@ -1,4 +1,4 @@
-<div class="form-group {{ customClass or '' }}" id="{{ key }}">
+<div class="form-group {% if hidden %} d-none {% endif %} {{ customClass or '' }}" id="{{ key }}">
 
     <div class="form-check {{ customClass }} {% if inline %} form-check-inline {% endif %} ">
         <input type="radio" name="{{ id }}_ck" id="{{ key }}{{ id }}_ck"

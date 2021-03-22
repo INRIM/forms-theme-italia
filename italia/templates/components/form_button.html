@@ -1,5 +1,5 @@
 <!--# 2020 Alessio Gerace @ Inrim-->
-<div class="{{ fgroupgp or 'form-group' }} {{ customClass }}" id="{{ key }}">
+<div class="{{ fgroupgp or 'form-group' }} {% if hidden %} d-none {% endif %} {{ customClass }}" id="{{ key }}">
     <button type="{{ type }}" name="{{ key }}_btn" class="btn {{ btn_class or 'btn-outline-primary' }}"
             {% if formaction %}
             formaction="{{ formaction }}"
